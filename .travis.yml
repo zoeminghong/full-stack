@@ -5,16 +5,15 @@ branches:
   only:
   - master
 install:
-  - npm i docsify-cli -g
-  - npm install
-  - git clone https://github.com/zoeminghong/full-stack.git
-# script:
-# - hexo generate && rsync -az -vv --delete -e 'ssh -p 29869' public/ brook@uedsky.com:/var/www/blog
+- npm i docsify-cli -g
+- npm install
+- git clone https://github.com/zoeminghong/full-stack.git
 addons:
   ssh_known_hosts: 67.209.184.19
-before_install:
-- openssl aes-256-cbc -K $encrypted_51cade6471f0_key -iv $encrypted_51cade6471f0_iv
-  -in id_rsa.enc -out ~\/.ssh/id_rsa -d
 after_success:
 - chmod 600 ~/.ssh/id_rsa
-- ssh root@67.209.184.19 -p 29869 -o StrictHostKeyChecking=no 'cd /etc/nginx/www && git pull'
+- ssh root@67.209.184.19 -p 29869 -o StrictHostKeyChecking=no 'cd /etc/nginx/www &&
+  git pull'
+before_install:
+- openssl aes-256-cbc -K $encrypted_a417267c90b2_key -iv $encrypted_a417267c90b2_iv
+  -in id_rsa.enc -out ~\/.ssh/id_rsa -d
