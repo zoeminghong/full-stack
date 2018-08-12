@@ -1,3 +1,4 @@
-# Headline
+# full-stack
 
-> An awesome project.
+
+![Build Status](https://travis-ci.org/zoeminghong/full-stack.svg?branch=master)
