@@ -4,10 +4,10 @@ node_js:
 branches:
   only:
   - master
-install:
-- npm i docsify-cli -g
-- npm install
-- git clone https://github.com/zoeminghong/full-stack.git
+# install:
+# - npm i docsify-cli -g
+# - npm install
+# - git clone https://github.com/zoeminghong/full-stack.git
 addons:
   ssh_known_hosts: 67.209.184.19
 after_success:
