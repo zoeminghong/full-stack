@@ -19,5 +19,5 @@ script:
 addons:
   ssh_known_hosts: 67.209.184.19
 after_success:
-- ssh root@67.209.184.19 -p 29869 -o StrictHostKeyChecking=no 'cd /etc/nginx/www &&
+- ssh root@67.209.184.19 -p 29869 -o StrictHostKeyChecking=no 'cd /etc/nginx/www/full-stack &&
   git pull'
