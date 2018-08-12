@@ -1,18 +1,17 @@
-language: python
-python:
- - "2.7"
+language: node_js
+node_js:
+- 8
 branches:
   only:
   - master
 env:
   - APP_DEBUG=false
 before_install:
-- sudo apt-get update -qq
-- sudo apt-get install -qq python3.2 python2.7
 - openssl aes-256-cbc -K $encrypted_a417267c90b2_key -iv $encrypted_a417267c90b2_iv
   -in id_rsa.enc -out ~/.ssh/id_rsa -d
 - chmod 600 ~/.ssh/id_rsa
-script: ./run_build.sh
+script: 
+- echo "Hello World"
 # install:
 # - npm i docsify-cli -g
 # - npm install
