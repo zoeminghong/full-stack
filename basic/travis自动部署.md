@@ -1,3 +1,15 @@
+## 注册并设置Travis CI
+
+先打开[Travis CI官网](https://link.zhihu.com/?target=https%3A//travis-ci.com/)，点击右上角使用Github登录的按钮（这里假设读者已经注册并掌握Github的基本使用了）
+
+![https://pic1.zhimg.com/80/v2-487060daf3a1875833ce135966526ed8_hd.jpg](https://pic1.zhimg.com/80/v2-487060daf3a1875833ce135966526ed8_hd.jpg)
+
+登录成功后，你应该会看到和下图差不多的页面，按照提示进行操作：
+
+![https://pic4.zhimg.com/80/v2-35a0e932cf8db58f535d929f7b3b1b31_hd.jpg](https://pic4.zhimg.com/80/v2-35a0e932cf8db58f535d929f7b3b1b31_hd.jpg)
+
+在目标项目下创建一个`.travis.yml`文件
+
 ## 自动部署到远程服务器
 
 我们要部署到远程服务器，那么势必需要让 Travis 登录到远程服务，那么登录密码怎么处理才能保证安全？这是首先要解决的问题，明文肯定是不行的。
