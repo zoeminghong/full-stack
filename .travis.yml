@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-- 8
+- stable
 branches:
   only:
   - master
@@ -11,7 +11,7 @@ before_install:
   -in id_rsa.enc -out ~/.ssh/id_rsa -d
 - chmod 600 ~/.ssh/id_rsa
 script: 
-- echo "Hello World"
+- echo "Start Deploy"
 # install:
 # - npm i docsify-cli -g
 # - npm install
@@ -21,3 +21,5 @@ addons:
 after_success:
 - ssh root@67.209.184.19 -p 29869 -o StrictHostKeyChecking=no 'cd /etc/nginx/www/full-stack &&
   git pull'
+notifications:
+  email: false

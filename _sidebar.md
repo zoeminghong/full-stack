@@ -34,6 +34,7 @@
 * **架构设计**
   * [技术栈选型](architecture/architecture_技术栈选型.md)
   * [设计思想](architecture/architecture_设计思想)
+  * [ID选型](architecture/architecture_id选择)
 * **团队管理**
   * [如何帮助团队成员成长](term_management/如何帮助团队成员成长.md)
 * **工具**
