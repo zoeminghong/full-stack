@@ -27,6 +27,8 @@
   * [IO](java/java_io.md)
 * **Spring Boot**
   * [Endpoint](spring_boot/spring_boot_endpoint.md)
+* **Spring Cloud**
+  * [Zuul](spring_cloud/sc_zuul.md)
 * **Vertx**
   * [Vertx与Phoenix的实现](/vertx/vertx-phoenix.md)
 * **安全**
