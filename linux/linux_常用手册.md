@@ -4,3 +4,9 @@
 ls -lh
 ```
 
+### 解压jar
+
+```shell
+jar xvf <包名>
+```
+
