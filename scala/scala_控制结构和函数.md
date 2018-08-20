@@ -6,13 +6,13 @@ scala的 `if/esle` 语法结构与Java一样，但是在scala中 `if/else` 表�
 
 我们可以将 `if/else` 表达式的值赋予给变量：
 
-```
+```scala
 val s = if (x>0) 1 else -1
 ```
 
 它等价于
 
-```
+```scala
 if (x>0) s = 1 else s = -1
 ```
 
@@ -24,13 +24,13 @@ if (x>0) s = 1 else s = -1
 
 如果 `else` 部分缺失，例如：
 
-```
+```scala
 if (x>0) 1
 ```
 
 等价于
 
-```
+```scala
 if (x>0) else ()
 ```
 
@@ -46,7 +46,7 @@ Scala没有 `switch` 语句，但是它有一个更强大的模式匹配机制�
 
 在Scala中赋值语句是没有值的，所以别把它们串接在一起。
 
-```
+```scala
 x = y = 1 //别这样做
 ```
 
@@ -62,7 +62,7 @@ x = y = 1 //别这样做
 
 scala支持 `while` 循环和 `for` 循环， `while` 循环与Java的 `while` 一样， `for` 循环语法如下：
 
-```
+```scala
 for( i <- 表达式)
 ```
 
@@ -72,25 +72,25 @@ for( i <- 表达式)
 
 可以使用变量 `<-` 表达式的形式提供多个生成器，用分号隔开。例如：
 
-```
+```scala
 for(i <-1 to 3, j <- 1 to 3) print ((10*i+j)+ " ")
 ```
 
 每个生成器还可以带过滤条件，以 `if` 开头的 `Boolean` 表达式。
 
-```
+```scala
 for(i <-1 to 3, j <- 1 to 3 if i != j) print ((10*i+j)+ " ")
 ```
 
 还可以使用任意多的定义，引入可以在循环中使用的变量：
 
-```
+```scala
 for( i <- 1 to 3; from = 4-i; j <- from to 3)  print ((10*i+j)+ " ")
 ```
 
 如果 `for` 循环的循环体以 `yield` 开始，则该循环会构造出一个集合，每次迭代出集合中的一个值：
 
-```
+```scala
 for( i <- 1 to 10) yield i % 3
 ```
 
@@ -100,7 +100,7 @@ for( i <- 1 to 10) yield i % 3
 
 要定义函数，需要给出函数的名称、参数和函数体：
 
-```
+```scala
 def abs(x:Double) = if (x>0) x else -x
 ```
 
@@ -114,7 +114,7 @@ def abs(x:Double) = if (x>0) x else -x
 
 scala中可以给函数提供默认参数：
 
-```
+```scala
 def func(num:Int = 2) num += 3
 ```
 
@@ -124,7 +124,7 @@ def func(num:Int = 2) num += 3
 
 scala中还支持接收可变长度参数列表：
 
-```
+```scala
 def sum(args: Int*){
 var result = 0
 for(arg <- args)
@@ -137,11 +137,11 @@ result
 
 如果你已经有一个值的序列，则不能直接将它传进上述函数。例如：
 
-```
+```scala
 val s = sum(1 to 5) //错误
 ```
 
-如果 `sum` 函数被调用时传入的是单个参数，那么该参数必须是单个整数，而不是一个整数区间。解决这个问题的办法是告诉编译器你希望这个参数被当作参数序列来处理，追加 `：_*` 。例如：
+如果 `sum` 函数被调用时传入的是单个参数，那么该参数必须是单个整数，而不是一个整数区间。解决这个问题的办法是告诉编译器你希望这个参数被当作参数序列来处理，**追加 `：_*`** 。例如：
 
 ```
 val s = sum(1 to 5: _*)

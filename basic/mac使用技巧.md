@@ -7,3 +7,12 @@
 得到上述的搜索结果后，可以点击各列的表头进行排序与分类。也可以直接选择你所需要的文件，进行复制、移动、拖拽等操作。还可以右键单击选中文件并选择「用所选项目新建文件夹」菜单项，以快速移动到一个文件夹中。
 
 ![yanshi](https://cdn.sspai.com/2018/08/11/d2ad2fee2336dc45da202713f62a2551.gif?imageView2/2/w/1120/q/90/interlace/1/ignore-error/1)
+
+### AI矢量画图破解
+
+- 下载AI 2017 CC版，安装完成，不要打开AI
+
+- 下载破解工具链接:https://pan.baidu.com/s/16DRPPxJFr-ROHhd_7UNQvw  密码:sk7s
+- 打开破解工具，点击patch就行了
+
+> 如果存在多个Adobe工具，可以将AI的`.app`文件拖到该破解工具
