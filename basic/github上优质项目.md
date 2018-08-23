@@ -100,7 +100,7 @@ Android 开源项目分类汇总
 
 - [Github 地址](https://github.com/getredash/redash)
 
-# Cheat.sh
+## Cheat.sh
 
 Linux shell 命令使用方法查询工具。只要`curl`方式轻轻松松获取自己想要的信息，无需安装
 
@@ -116,20 +116,27 @@ Linux shell 命令使用方法查询工具。只要`curl`方式轻轻松松获�
 
 - [Github 地址](https://github.com/donnemartin/system-design-primer/blob/master/README-zh-Hans.md)
 
-# InterviewMap
+## InterviewMap
 
 这是一份能让你更好准备下一次面试的图谱，涵盖了前端和服务端等方向的知识
 
 - [Github 地址](https://github.com/InterviewMap/InterviewMap/blob/master/README-ZH.md)
 
-# OpenSourceMacOsApps
+## OpenSourceMacOsApps
 
 MacOS开源程序列表
 
 - [Github 地址](https://github.com/serhii-londar/open-source-mac-os-apps)
 
-# InterviewNotebook
+## InterviewNotebook
 
 涵盖操作系统、算法、Linux、设计思想等方面的学习笔记
 
 - [Github 地址](https://github.com/jianghui-galaxy/Interview-Notebook)
+
+## 100-Days-Of-ML-Code
+
+100天入门机器学习课程
+
+- [Github 地址](https://github.com/Avik-Jain/100-Days-Of-ML-Code)
+
