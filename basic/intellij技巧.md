@@ -2,19 +2,17 @@
 
 ## 快捷键
 
-| 快捷键            | 说明                                                         |
-| ----------------- | ------------------------------------------------------------ |
-| option+F7         | 获取当前选中的方法、类、字段被用到的地方                     |
-| command+E         | 最近打开的文件                                               |
-| command+option+↔  | 上一次编辑的位置                                             |
-| command+option+U  | 查看类或方法的继承关系                                       |
-| command+N         | 生成代码（getter、setter、构造函数、hashCode/equals,toString） |
-| command+option+T  | 包围代码（使用if..else, try..catch, for, synchronized等包围选中的代码） |
-| command+/         | 注释/取消注释与行注释                                        |
-| command+option+/  | 注释/取消注释与块注释                                        |
-| shift+option+光标 | 多行编辑                                                     |
-|                   |                                                              |
-|                   |                                                              |
+| 快捷键           | 说明                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| option+F7        | 获取当前选中的方法、类、字段被用到的地方                     |
+| command+E        | 最近打开的文件                                               |
+| command+option+↔ | 上一次编辑的位置                                             |
+| command+option+U | 查看类或方法的继承关系                                       |
+| command+N        | 生成代码（getter、setter、构造函数、hashCode/equals,toString） |
+| command+option+T | 包围代码（使用if..else, try..catch, for, synchronized等包围选中的代码） |
+| command+/        | 注释/取消注释与行注释                                        |
+| command+option+/ | 注释/取消注释与块注释                                        |
+|                  |                                                              |
 
 ## 神奇的快捷键
 
@@ -72,43 +70,34 @@
 
 ![image-20180905194020086](assets/image-20180905194020086.png)
 
-![image-20180905194719230](assets/image-20180905194719230.png)
-
 是不是觉得之前写代码的时候咋都没看到过。
 
-### 生成单元测试类
+![image-20180905194719230](assets/image-20180905194719230.png)
 
-首先需要光标选中类名，`option+enter` 
+### 生成单测类
 
-![image-20180905195450227](assets/image-20180905195450227.png)
-
-或者`option+shift+T`
+使用组合键`command+shift+T`生成单元测试类
 
 ![image-20180905200417763](assets/image-20180905200417763.png)
 
-### 显示类继承关系图
+### 类继承关系图
 
-选中查看的对象或类，使用`shift+option+command+U`组合键
-
-![image-20180905195836561](assets/image-20180905195836561.png)
+在看源码的时候，时常需要查看类的继承关系，以了解全局代码结构，在IDE中提供了`command+shift+option+U`方式，显示光标选择的类的继承关系图。
 
 ![image-20180905195904107](assets/image-20180905195904107.png)
 
 ![image-20180905195926694](assets/image-20180905195926694.png)
 
-- **蓝色实线箭头**是指继承关系
-- **绿色虚线箭头**是指接口实现关系
-
-右键
+如果想更加详细的了解每个实体的具体信息，还可以如下：
 
 ![image-20180905200047290](assets/image-20180905200047290.png)
 
-或者直接工具栏点击如下的选项
+或者这样
 
 ![image-20180905200142869](assets/image-20180905200142869.png)
 
+得到全面的信息
+
 ![image-20180905200159728](assets/image-20180905200159728.png)
 
-好神奇，有木有。
-
-**拓展连接**：https://www.cnblogs.com/deng-cc/p/6927447.html
+是不是感觉很好用
