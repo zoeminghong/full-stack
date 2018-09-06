@@ -16,3 +16,15 @@
 - 打开破解工具，点击patch就行了
 
 > 如果存在多个Adobe工具，可以将AI的`.app`文件拖到该破解工具
+
+### 清理`Docker.qcow2`
+
+```shell
+#停止Docker服务
+osascript -e ‘quit app "Docker"‘ 
+#删除Docker文件 
+rm ~/Library/Containers/com.docker.docker/Data/com.docker.driver.amd64-linux/Docker.qcow2 
+#重新运行
+Docker open -a Docker
+```
+
