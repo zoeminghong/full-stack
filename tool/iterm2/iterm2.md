@@ -99,5 +99,37 @@
 
 iTerm>Preferences>Profiles>Window下，Column和Row
 
+## 支持rz/sz
 
+配置步骤：
+
+1. 下载安装lrzsz，创建软连接（mac本上）
+
+   ```shell
+    ~ sudo brew install lrzsz
+    ~ ln -s /usr/local/Cellar/lrzsz/0.12.20/bin/sz
+    ~ ln -s /usr/local/Cellar/lrzsz/0.12.20/bin/rz
+   ```
+
+   > 说明：lrzsz在本地和远程主机均要安装！
+
+2. 下载并安装automatic zmoderm for iTerm2
+
+   ```shell
+    ~ cd usr/local/bin
+    ~ sudo wget https://raw.github.com/mmastrac/iterm2-zmodem/master/iterm2-send-zmodem.sh
+    ~ sudo wget https://raw.github.com/mmastrac/iterm2-zmodem/master/iterm2-recv-zmodem.sh
+    ~  sudo chmod 777 /usr/local/bin/iterm2-*
+   ```
+
+   脚本地址：https://github.com/mmastrac/iterm2-zmodem
+
+3. 添加iTerm2 trigger
+
+   **iTerm2 --> Profiles --> Open Profiles --> Edit Profiles --> Advanced --> Edit Trigger**
+
+   | Regular expression  | Action               | Parameters                           |
+   | ------------------- | -------------------- | ------------------------------------ |
+   | \*\*B0100           | Run Silent Coprocess | /usr/local/bin/iterm2-send-zmodem.sh |
+   | \*\*B00000000000000 | Run Silent Coprocess | /usr/local/bin/iterm2-recv-zmodem.sh |
 
