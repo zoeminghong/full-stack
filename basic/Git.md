@@ -1,3 +1,5 @@
+[TOC]
+
 ## Quick Start
 
 ### 初次运行Git
@@ -91,6 +93,12 @@ git commit -m "[...]"
 git push -u origin master
 ```
 
+### 关键词说明
+
+- HEAD：代表始终指向最新提交记录点
+- 显式引用：SHA1就代表显式引用
+- 隐式引用：HEAD就代表隐式引用
+
 ## 基础命令
 
 Git官方文档地址：https://git-scm.com/docs/
@@ -124,15 +132,40 @@ git commit -m ["记录描述"] --author=["zoeminghong <617405347@qq.com>"]
 git commit -a
 ```
 
+### Mv
+
+重命名文件
+
+```shell
+git mv [原文件名] [新文件名]
+```
+
 ### Log
 
 查看提交信息
 
 ```shell
 git log
+# 查看指定文件的日志信息
+git log [文件名]
+# 查看提交范围中的提交信息
+git log --abbrev-commit master~12..master~10
+# 列举提交中所更改的文件以及每个更改的文件中有多少行做了改动
+git log --stat master~12..master~10
+# 显示一个提交信息
+git log -1 [提交名]
+# 输出提交引进的补丁或变更
+git log -p [提交名]
 ```
 
 ![image-20180909233449677](assets/image-20180909233449677.png)
+
+```shell
+# 在日志中回溯并找到内容相关联的整个历史记录
+git log --follow [文件名]
+```
+
+比如：某个文件名称发生了变更，通过该命令就可以追溯原文件名的记录信息
 
 ### Show
 
@@ -143,6 +176,10 @@ git log
 git show
 # 显示指定提交点信息
 git show 2b9f38ad714a191bdd854f3f2197e1b4e545a4e3
+# 显示特定文件的信息
+git show orgin/master:[fileName]
+# 显示分支下的文件
+git show [分支]:[文件名]
 ```
 
 ![image-20180909233623543](assets/image-20180909233623543.png)
@@ -151,8 +188,15 @@ git show 2b9f38ad714a191bdd854f3f2197e1b4e545a4e3
 
 版本库中删除文件
 
+**注：**在删除文件前，最好更新到最新，防止更新意外丢失
+
 ```shell
+# 将文件从索引和工作目录中都删除
 git rm [文件名]
+# 由已暂存的文件转为未暂存的文件，但不会删除文件(标记为未追踪)
+git rm --cached [文件名]
+# 强制删除文件索引和工作目录中的文件
+git rm -f [文件]
 ```
 
 ### Reflog
@@ -225,6 +269,37 @@ git tag -l
 git branch [new-branch-name] [tag-name]
 ```
 
+### Branch
+
+分支
+
+```shell
+# 创建分支
+git branch [1.2.1]
+git branch [1.2.1] [分支起始SHA1]
+# 查看分支
+git branch
+# 显示所有分支
+git branch -a
+# 显示远程追踪分支
+git branch -r
+# 删除分支
+git branch -d [分支名]
+```
+
+### Checkout
+
+切换分支
+
+```shell
+git checkout [分支名]
+# 合并变更到目标分支
+git checkout -m [目标分支]
+# 创建并切换到新分支
+git checkout -b [新分支名]
+git checkout -b [1.2.1] [分支起始SHA1]
+```
+
 ### Diff
 
 比较记录的内容的差异
@@ -237,7 +312,7 @@ git branch [new-branch-name] [tag-name]
 # 显示暂存区和上一个commit的差异【文件名】
 $ git diff --cached [hell.txt]
 
-$ git diff [sha1] [sha1]
+$ git diff [sha1] [sha2]
 
 # 显示工作区与当前分支最新commit之间的差异
 $ git diff HEAD
@@ -293,6 +368,63 @@ git stash drop <stash_id>
 #### git stash clear
 
 删除所有存储的进度。
+
+### Show-branch
+
+提供提交历史图
+
+```shell
+# 限制显示10条记录
+git show-branch --more=35 | tail -10
+```
+
+### Rev-parse
+
+将各类提交名转换为SHA1值
+
+```shell
+git rev-parse [提交名]
+git rev-parse master~3
+```
+
+### Blame
+
+查看具体文件每行最新变更信息
+
+```shell
+# -L 显示行数
+git blame -L 35 pom.xml
+```
+
+### Bisect
+
+当遇到数据或者提交信息被覆盖的时候，定位最近一次正常提交点的数据。先圈定出错范围，在通过二分法缩小范围。
+
+一般当前HEAD为异常记录，通过
+
+```shell
+# 开始
+git bisect start
+git bisect bad
+```
+
+标记“好”
+
+```shell
+git bisect good 1.2.0-RC
+# 查看已经标记的记录
+git bisect log
+```
+
+最终确定位置后
+
+```shell
+# 由于bisect操作会在一个新分支上进行操作
+git branch
+# 切换回原先分支
+git bisect reset
+git branch
+```
 
 ## 高级使用
 
@@ -359,6 +491,42 @@ git config --global alias.show-graph 'log --graph --abbrev-commit --pretty=onlin
 ```
 
 例子中只需命令行执行`git show-graph`，即可实现 `git log --graph --abbrev-commit --pretty=online`
+
+### 文件误删恢复
+
+**文件索引已被删除**
+
+```shell
+git rm --cache [data]
+# 文件进行追踪操作
+git add [data]
+```
+
+**文件已被删除**
+
+```shell
+git rm [data]
+# 恢复当前提交点中data文件
+git checkout HEAD -- [data]
+```
+
+### `.gitignore`
+
+语法说明
+
+| 符号                    | 说明                                           | 示例     |
+| ----------------------- | ---------------------------------------------- | -------- |
+| #                       | 用于开头，表示注释                             | `# 说明` |
+| 字面文字                | 匹配文字文件，将其排除                         |          |
+| 目录名由反斜线（/）标记 | 匹配同名的目录和子目录，但不匹配文件或符号链接 |          |
+| *                       | 通配符，模糊匹配                               | *.java   |
+| 起始的感叹号！          | 取反作用                                       |          |
+
+### 相对提交名
+
+`^`符号用来选择不同的父提交。给定一个提交C，`C^1`表示第一个父提交，`C^2`表示第二个父提交
+
+`~`符号用于返回父提交之前并选择上一代提交。给定一个提交C，`C~1`表示第一个父提交，`C~`表示第一个祖父提交
 
 ## 复杂场景实操
 
