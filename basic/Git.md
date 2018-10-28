@@ -645,6 +645,9 @@ $ git branch [branch-name]
 # 新建一个分支，并切换到该分支
 $ git checkout -b [branch]
 
+#基于远程分支来创建分支
+$ git checkout -b [branch] [remote branch]
+
 # 新建一个分支，指向指定commit
 $ git branch [branch] [commit]
 
@@ -1264,6 +1267,13 @@ git merge tmp
 
 # 删除分支
 git branch -d tmp
+```
+
+##### 如何批量删除untracked更改
+
+```shell
+# 只删除所有untracked的文件
+git clean -df
 ```
 
 ## Tips

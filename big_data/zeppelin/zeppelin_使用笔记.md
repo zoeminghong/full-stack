@@ -39,6 +39,23 @@
 
 具体配置查看`Zeppelin UI`右上角的Configuration
 
+## Dependence管理
+
+### 添加私服地址
+
+[配置私服地址](https://zeppelin.apache.org/docs/0.7.2/manual/dependencymanagement.html)
+
+### 修改Interpreter的依赖私服地址
+
+**spark Interpreter**
+
+| 配置项                                  | 值                                                           |
+| --------------------------------------- | ------------------------------------------------------------ |
+| zeppelin.dep.additionalRemoteRepository | spark-packages,http://dl.bintray.com/spark-packages/maven,false; |
+| zeppelin.dep.localrepo                  | local-repo                                                   |
+
+这两个配置项任选其一都可以进行私服的配置，`zeppelin.dep.localrepo`中的值就是上面私服的名称即可。
+
 ## 支持语言
 
 | 标识   | 语言     |
