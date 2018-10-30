@@ -84,6 +84,7 @@
 * **工具**
   * [Alfred](tool/alfred/alfred.md)
   * [Iterm2](tool/iterm2/iterm2.md)
+  * [Zsh](tool/iterm2/zsh.md)
 
 
 

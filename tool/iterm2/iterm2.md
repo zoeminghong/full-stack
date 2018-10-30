@@ -132,3 +132,4 @@ iTerm>Preferences>Profiles>Window下，Column和Row
    | ------------------- | -------------------- | ------------------------------------ |
    | \*\*B0100           | Run Silent Coprocess | /usr/local/bin/iterm2-send-zmodem.sh |
    | \*\*B00000000000000 | Run Silent Coprocess | /usr/local/bin/iterm2-recv-zmodem.sh |
+
