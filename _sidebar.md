@@ -53,7 +53,8 @@
     * [启动流程](big_data/kafka/kafka_启动流程.md)
     * [生产者](big_data/kafka/kafka_生产者.md)
     * [应用](big_data/kafka/kafka_应用.md)
-    * [Topic添加流程.md](big_data/kafka/kafka_topic添加流程.md)
+    * [主题添加流程](big_data/kafka/kafka_topic添加流程.md)
+    * [QA](big_data/kafka/kafka_qa.md)
   * Spark
     * [基础概念](big_data/spark/spark_基础概念.md)
   * Kerberos
@@ -66,6 +67,10 @@
   * [安全攻击与防护](safe/safe_安全攻击与防护.md)
 * **Java**
   * [IO](java/java_io.md)
+  * **JVM**
+    * [Java代码是怎么运行的](java/jvm/jvm_001.md)
+    * [Java的基本类型](java/jvm/jvm_003.md)
+    * [JVM是如何加载类的](java/jvm/jvm_003.md)
 * **Spring Boot**
   * [Endpoint](spring_boot/spring_boot_endpoint.md)
   * [Redis](spring_boot/sb_redis.md)

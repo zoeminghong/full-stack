@@ -296,7 +296,7 @@ hadoop.proxyuser.HTTP.groups=true
     conf.set(QueryServices.QUERY_SERVER_DISABLE_KERBEROS_LOGIN, "false")
 
     val instance = new HikariDataSource()
-    instance.setJdbcUrl("jdbc:phoenix:thin:url=http://testdmp7.fengdai.org:8765?doAs=hbase;serialization=PROTOBUF;authentication=SPNEGO;principal=dcp;keytab=" + classPath + "dcphbasehttp.headless.keytab")
+    instance.setJdbcUrl("jdbc:phoenix:thin:url=http://testdmp7.fengdai.org:8765?doAs=hbase;serialization=PROTOBUF;authentication=SPNEGO;principal=hbase-exper@EXPER.ORG;keytab=" + classPath + "hbase.headless.keytab")
     instance.setDriverClassName("org.apache.phoenix.queryserver.client.Driver")
     instance.setConnectionTestQuery("SELECT 1")
 
@@ -326,7 +326,9 @@ hadoop.proxyuser.HTTP.groups=true
   }
 ```
 
-源码：https://github.com/apache/phoenix/blob/master/phoenix-queryserver/src/main/java/org/apache/phoenix/queryserver/server/QueryServer.java
+在URL中使用到的keytab没有特殊的要求，只要能支持认证就可以了。doAs是为了作为一个资源的伪装者，比如：doAs=user1，那么只能访问user1能被访问的资源，其他的都不可以
+
+[Phoenix源码](https://github.com/apache/phoenix/blob/master/phoenix-queryserver/src/main/java/org/apache/phoenix/queryserver/server/QueryServer.java)
 
 ## Livy Client
 
@@ -507,8 +509,161 @@ object KBHttpUtils {
 
 ## SPNEGO
 
+`login.conf`
+
+```
+Client {
+  com.sun.security.auth.module.Krb5LoginModule required
+  storeKey=true
+  useKeyTab=true
+  debug=true
+  keyTab="/etc/security/keytabs/spnego.service.keytab"
+  principal="HTTP/testdmp7.fengdai.org";
+};
+```
+
+`krb5.conf`
+
+```
+# Configuration snippets may be placed in this directory as well
+
+[logging]
+ default = FILE:/var/log/krb5libs.log
+ kdc = FILE:/var/log/krb5kdc.log
+ admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+ dns_lookup_realm = false
+ ticket_lifetime = 24h
+ renew_lifetime = 7d
+ forwardable = true
+ rdns = false
+ default_realm = FENGDAI.ORG
+ default_ccache_name = KEYRING:persistent:%{uid}
+ dns_fallback = no
+ dns_lookup_kdc = true
+ udp_preference_limit = 1
+
+[realms]
+  FENGDAI.ORG = {
+   kdc = test-dmp1.fengdai.org:88
+   kdc = test-dmp8.fengdai.org:88
+   admin_server = test-dmp1.fengdai.org
+   default_domain = FENGDAI.ORG
+  }
+
+[domain_realm]
+  .fengdai.org = FENGDAI.ORG
+  fengdai.org = FENGDAI.ORG
+```
+
+`Http方式调用`
+
+```scala
+ val sb = new StringBuilder
+    val bos = new ByteArrayOutputStream
+    var in: InputStream = null
+    try {
+      System.setProperty("java.security.auth.login.config", "login.conf")
+      System.setProperty("java.security.krb5.conf", "krb5.conf")
+      val spnego = new SpnegoHttpURLConnection(loginModuleName)
+      spnego.setRequestMethod(httpMethod.name())
+      if (headers != null && headers.size > 0) headers.foreach(v => spnego.setRequestProperty(v._1, v._2))
+      else {
+        spnego.setRequestProperty(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        spnego.setRequestProperty(HttpHeaders.ACCEPT,  MediaType.APPLICATION_JSON_VALUE)
+        spnego.setRequestProperty("X-Requested-By", "admin")
+      }
+      if (data != null) bos.write(data.getBytes)
+      spnego.connect(new URL(url), bos)
+      logger.info(s"Spnego Http Request Params $data,HTTP Status Code-${spnego.getResponseCode},HTTP Status Message-${spnego.getResponseMessage}")
+      in = spnego.getInputStream
+      val b = new Array[Byte](1024)
+      var len = in.read(b)
+      while (len > 0) {
+        sb.append(new String(b, 0, len))
+        len = in.read(b)
+      }
+      sb.toString
+    } catch {
+      case e: Exception =>
+        logger.error(e.getMessage, e.getCause)
+        s"Kerberos认证失败-${e.getMessage}"
+    } finally {
+      if (in != null) try
+        in.close()
+      catch {
+        case e: IOException =>
+          logger.error(e.getMessage, e.getCause)
+          return s"Kerberos认证失败-${e.getMessage}"
+      }
+      if (bos != null) try
+        bos.close()
+      catch {
+        case e: IOException =>
+          logger.error(e.getMessage, e.getCause)
+          s"Kerberos认证失败-${e.getMessage}"
+      }
+    }
+```
+
 http://lab.howie.tw/2013/12/Kerberos-Authentication-with-SPNEGO.html
+
+
 
 ## Ranger
 
 Ranger作为授权组件
+
+![http://static-aliyun-doc.oss-cn-hangzhou.aliyuncs.com/assets/img/17950/153803772311510_zh-CN.png](http://static-aliyun-doc.oss-cn-hangzhou.aliyuncs.com/assets/img/17950/153803772311510_zh-CN.png)
+
+### HDFS
+
+备用模式的选项使用Ambari→HDFS→Configs→Advanced ranger-hdfs-security中的属性进行配置。
+
+```shell
+ xasecure.add-hadoop-authorization  =  true
+```
+
+### 将HDFS umask从022更改为077
+
+这将防止除所有者以外的任何人访问任何新的文件或文件夹。
+
+管理员可以通过Ambari更改此属性：Ambari->HDFS->Configs->Advanced->Advanced hdfs-site。
+
+```shell
+fs.permissions.umask-mode=022
+```
+
+### 命令行修改权限
+
+```shell
+hdfs dfs -chmod -R 700 /user/*
+```
+
+### 授权文件夹权限
+
+Ranger只能控制文件夹维度的权限，不能控制具体的文件的权限。假设租户A拥有`tenant/a`路径的RXW权限，租户B向租户A申请`tenant/a/a1`路径的RX权限。这个时候，A可以在Ranger中为A创建一个路径权限，同时要将`Delegate Admin`打上勾。租户B就可以使用`tenant/a/a1`。
+
+### 查看日志
+
+Ranger日志存放路径为`/var/log/ranger/admin/xa_portal.log` 
+
+### Hive数据脱敏实现
+
+[文档](https://www.jianshu.com/p/d9941b8687b7)
+
+#### Q&A
+
+1、Ranger fails with error "Error creating policy"
+
+```
+2017-10-24 15:51:28,710 [http-bio-6080-exec-12] INFO  org.apache.ranger.common.RESTErrorUtil (RESTErrorUtil.java:345) - Request failed. loginId=holger_gov, logMessage=User 'holger_gov' does not have delegated-admin privilege on given resourcesjavax.ws.rs.WebApplicationException  at org.apache.ranger.common.RESTErrorUtil.createRESTException(RESTErrorUtil.java:337)
+```
+
+解决方案：
+
+User holger_gov does not have privileges to create policy. User has to have ADMIN role in ranger or needs to be delegated admin for the specified resource. Can you check this?
+
+[来源](https://community.hortonworks.com/questions/142361/ranger-fails-with-error-error-creating-policy.html)
+

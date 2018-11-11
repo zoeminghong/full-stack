@@ -35,3 +35,9 @@
 选择 custom
 
 https://gist.githubusercontent.com/gnachman/4cbe6743baa7fe07536b/raw/61fceba4a0b2624850ac1b4a20ac8ca48e07f7d2/gistfile1.txt
+
+## 全面拓展
+
+https://sspai.com/topic/237
+
+[Alfred 神器使用手册](https://sspai.com/post/44624)

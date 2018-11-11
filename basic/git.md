@@ -433,9 +433,9 @@ git blame -L 35 pom.xml
 
 ### bisect
 
-当遇到数据或者提交信息被覆盖的时候，定位最近一次正常提交点的数据。先圈定出错范围，在通过二分法缩小范围。
+当遇到数据或者提交信息被覆盖的时候，定位最近一次正常提交点的数据。先圈定出错范围，在通过二分法缩小范围。（只是定位问题不能回退数据）
 
-一般当前HEAD为异常记录，通过
+1、一般当前HEAD为异常记录，通过
 
 ```shell
 # 开始
@@ -443,7 +443,7 @@ git bisect start
 git bisect bad
 ```
 
-标记“好”
+2、标记“好”
 
 ```shell
 git bisect good 1.2.0-RC
@@ -451,7 +451,7 @@ git bisect good 1.2.0-RC
 git bisect log
 ```
 
-最终确定位置后
+3、最终确定位置后
 
 ```shell
 # 由于bisect操作会在一个新分支上进行操作
@@ -514,6 +514,18 @@ git rebase master
 git rebase --onto master maint^ feature
 # 重新编排、编辑、删除、把多个提交合并为一个
 git rebase -i master~3
+```
+
+### revert
+
+对于Push到远程仓库的操作，可以使用revert进行处理。
+
+```shell
+# 跳过前第四个
+git revert HEAD~4
+#X...Y 代表一个左开右闭区间(X,Y]
+git revert HEAD~3...HEAD
+git revert 6a2cc3d...6a43ed0
 ```
 
 ### remote
@@ -1169,6 +1181,22 @@ git reset --hard ORIG_HEAD
 
 ```shell
 git branch -r -d origin/dev
+```
+
+### 远程分支版本回退
+
+**方式一：**
+
+```shell
+git reflog
+git reset --hard [sha1]
+git push -f
+```
+
+**方式二：**
+
+```shell
+git revert HEAD~3...HEAD
 ```
 
 ## 复杂场景实操
