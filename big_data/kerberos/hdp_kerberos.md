@@ -1,5 +1,9 @@
 # HDP Kerberos
 
+文档是基于`HDP 3.0` 环境进行说明，Kerberos使用的是`MIT KDC` 模式，安装了 Ranger 进行权限授权操作。
+
+在使用过程，需要铭记使用了Kerberos之后，其实权限存在Linux权限、Kerberos权限、Ambari权限、Ranger权限四个维度对资源进行控制。
+
 ## KDC
 
 由于被Long-term Key加密的数据包不能用于网络传送，所以我们使用另一种Short-term Key来加密需要进行网络传输的数据。由于这种Key只在一段时间内有效，即使被加密的数据包被黑客截获，等他把Key计算出来的时候，这个Key早就已经过期了。
@@ -34,20 +38,33 @@ KDC生成Session Key规则：使用**Client的Master Key**和**自己的Master K
 | `/usr/sbin/kgcmgr`         | 配置 Kerberos 主 KDC 和从 KDC                                |
 | `/usr/sbin/kproplog`       | 列出更新日志中更新项的摘要                                   |
 
-| 进入kadmin             | kadmin.local/kadmin                                          |
-| ---------------------- | ------------------------------------------------------------ |
-| 创建数据库             | kdb5_util create -r JENKIN.COM -s                            |
-| 启动kdc服务            | service krb5kdc start                                        |
-| 启动kadmin服务         | service kadmin start                                         |
-| 修改当前密码           | kpasswd                                                      |
-| 测试keytab可用性       | kinit -k -t /var/kerberos/krb5kdc/keytab/root.keytab root/master1@JENKIN.COM |
-| 查看keytab             | klist -e -k -t /etc/krb5.keytab                              |
-| 清除缓存               | kdestroy                                                     |
-| 通过keytab文件认证登录 | kinit -kt /var/run/cloudera-scm-agent/process/***-HIVESERVER2/hive.keytab hive/node2 |
+| 进入kadmin                  | kadmin.local/kadmin                                          |
+| --------------------------- | ------------------------------------------------------------ |
+| 创建数据库                  | kdb5_util create -r JENKIN.COM -s                            |
+| 启动kdc服务                 | service krb5kdc start                                        |
+| 启动kadmin服务              | service kadmin start                                         |
+| 修改当前密码                | kpasswd                                                      |
+| 测试keytab可用性            | kinit -k -t /var/kerberos/krb5kdc/keytab/root.keytab root/master1@JENKIN.COM |
+| 查看keytab                  | klist -e -k -t /etc/krb5.keytab                              |
+| 清除缓存                    | kdestroy                                                     |
+| 通过keytab文件认证登录      | kinit -kt /var/run/cloudera-scm-agent/process/***-HIVESERVER2/hive.keytab hive/node2 |
+| 查看此keytab中所有principal | klist -k user.keytab                                         |
+| 更新credentials             | kinit -R                                                     |
 
 [Kerberos定制化模版](https://docs.hortonworks.com/HDPDocuments/Ambari-2.5.0.3/bk_ambari-security/content/customizing_the_attribute_template.html)
 
 [管理管理员凭证](https://docs.hortonworks.com/HDPDocuments/Ambari-2.5.0.3/bk_ambari-security/content/managing_admin_credentials.html)
+
+### 合并keytab
+
+```shell
+# ktutil
+ktutil:  rkt /tmp/service1.keytab
+ktutil:  rkt /tmp/service2.keytab
+ktutil:  rkt /tmp/service3.keytab
+ktutil:  wkt /tmp/combined.keytab
+ktutil:  exit
+```
 
 ### KDC服务器命令
 
@@ -258,6 +275,12 @@ System.setProperty("java.security.krb5.conf", "/etc/krb5.conf")
 
 ### 支持多租户方式
 
+在实现多租户功能中，Phoenix使用的是代理的方式，doAs的值就表示要代理的用户，Phoenix的权限根据该用户进行控制。
+
+当spark服务中部署的应用中使用了`Phoenix Query Server`，需要在所有yarn服务器中将拥有权限的keytab放置服务器中，一般keytab放置于`/etc/security/keytabs`目录下。因为Executor任务会读取Linux环境下的keytab文件（当然路径还是可以自己指定的，这里说的是yarn方式部署情况）。
+
+#### 配置
+
 需要在Ambari下HBase中`hbase-site.xml`添加配置
 
 ```
@@ -326,9 +349,68 @@ hadoop.proxyuser.HTTP.groups=true
   }
 ```
 
-在URL中使用到的keytab没有特殊的要求，只要能支持认证就可以了。doAs是为了作为一个资源的伪装者，比如：doAs=user1，那么只能访问user1能被访问的资源，其他的都不可以
+在URL中使用到的keytab没有特殊的要求，只要能支持认证就可以了。doAs是为了作为一个资源的伪装者，比如：doAs=user1，那么只能访问user1能被访问的资源，其他的都不可以。
 
 [Phoenix源码](https://github.com/apache/phoenix/blob/master/phoenix-queryserver/src/main/java/org/apache/phoenix/queryserver/server/QueryServer.java)
+
+### Q&A
+
+1、`The KEYTAB does not  reference a normal, existent file: hbase.headless.keytab`
+
+**A：**路径下找不到这个文件，路径应该错误的。
+
+2、`Caused by: java.lang.RuntimeException: Failed to perform Kerberos login`
+
+**A：**principal与keytab不一致，导致认证不通过
+
+3、`The KEYTAB does not reference a normal, existent file: /etc/security/keytabs/testdcpods-group.keytab`
+
+**A：**查看一下keytab是否每一天yarn服务器都有创建文件，必须所有服务器都覆盖到，同时，确认一下linux下的权限是否存在问题，可以先chmod 445，等没有问题之后，再尝试chmod 770。
+
+4、`Exception in thread "main" java.lang.IllegalArgumentException: Can't get Kerberos realm`
+
+**A：**`krb5.conf` 配置文件存在格式或者配置问题。可以参考：
+
+```
+[logging]
+ default = FILE:/var/log/krb5libs.log
+ kdc = FILE:/var/log/krb5kdc.log
+ admin_server = FILE:/var/log/kadmind.log
+
+[libdefaults]
+ dns_lookup_realm = false
+ ticket_lifetime = 24h
+ renew_lifetime = 7d
+ forwardable = true
+ rdns = false
+ default_realm = EXPER.ORG
+ default_ccache_name = KEYRING:persistent:%{uid}
+ dns_fallback = no
+ dns_lookup_kdc = true
+ udp_preference_limit = 1
+
+[realms]
+  EXPER.ORG = {
+   kdc = testdmp1.fengdai.org
+   admin_server = testdmp1.fengdai.org
+   default_domain = EXPER.ORG
+  }
+[domain_realm]
+  .exper.org = EXPER.ORG
+  exper.org = EXPER.ORG
+```
+
+5、是否需要创建Linux用户进行权限配置
+
+**A：** 需要，需要所有服务器都进行相应的用户创建，通过ranger进行功能的授权。
+
+6、`org.apache.hadoop.hbase.security.AccessDeniedException: org.apache.hadoop.hbase.security.AccessDeniedException: Insufficient permissions for user ‘dcp@EXPER.ORG',action: put, tableName:gjx_test, family:cf1, column: name`
+
+**A:** dcp用户不存在该表的权限，使用Ranger进行授权就可以了。
+
+7、`main : run as user is testdcpods main : requested yarn user is testdcpods User testdcpods not found`
+
+**A:** 没有在Linux下面创建用户。
 
 ## Livy Client
 
@@ -667,3 +749,16 @@ User holger_gov does not have privileges to create policy. User has to have ADMI
 
 [来源](https://community.hortonworks.com/questions/142361/ranger-fails-with-error-error-creating-policy.html)
 
+## Zepplin
+
+### Phoenix Kerberos
+
+![image-20181112101053205](assets/image-20181112101053205.png)
+
+### Spark Kerberos
+
+![image-20181112101953960](assets/image-20181112101953960.png)
+
+![image-20181112102027692](assets/image-20181112102027692.png)
+
+Spark Interpreters 中必须存在SPARK_HOME配置。
