@@ -22,15 +22,15 @@
 
 先将焦点定位到双引号里面，使用`option+enter`快捷键弹出`inject language`视图，并选中 **Inject language or reference**。 
 
-![image-20180905191708059](/var/folders/jq/xmm7f3ds2ql5h2k85hz904rh0000gn/T/abnerworks.Typora/image-20180905191708059.png)
+![image-20181113201736198](assets/image-20181113201736198.png)
 
 选择后,切记，要直接按下enter回车键，才能弹出inject language列表。在列表中选择 json组件。 
 
-![image-20180905191858437](/var/folders/jq/xmm7f3ds2ql5h2k85hz904rh0000gn/T/abnerworks.Typora/image-20180905191858437.png)
+![image-20181113201808350](assets/image-20181113201808350.png)
 
 选择完后。鼠标焦点自动会定位在双引号里面，这个时候你再次使用`option+enter`就可以看到 
 
-![image-20180905191928016](/var/folders/jq/xmm7f3ds2ql5h2k85hz904rh0000gn/T/abnerworks.Typora/image-20180905191928016.png)
+![image-20181113201855080](assets/image-20181113201855080.png)
 
 选中`Edit JSON Fragment`并回车，就可以看到编辑JSON文件的视图了。
 
