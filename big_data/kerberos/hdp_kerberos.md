@@ -365,7 +365,7 @@ hadoop.proxyuser.HTTP.groups=true
 
 3、`The KEYTAB does not reference a normal, existent file: /etc/security/keytabs/testdcpods-group.keytab`
 
-**A：**查看一下keytab是否每一天yarn服务器都有创建文件，必须所有服务器都覆盖到，同时，确认一下linux下的权限是否存在问题，可以先chmod 445，等没有问题之后，再尝试chmod 770。
+**A：**查看一下keytab是否每一天yarn服务器都有创建文件，必须所有服务器都覆盖到，同时，确认一下linux下的权限是否存在问题，可以先chmod 644，等没有问题之后，再尝试chmod 755。
 
 4、`Exception in thread "main" java.lang.IllegalArgumentException: Can't get Kerberos realm`
 
@@ -761,4 +761,4 @@ User holger_gov does not have privileges to create policy. User has to have ADMI
 
 ![image-20181112102027692](assets/image-20181112102027692.png)
 
-Spark Interpreters 中必须存在SPARK_HOME配置。
+Spark Interpreters 中必须存在`SPARK_HOME`配置。
