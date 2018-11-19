@@ -82,6 +82,8 @@ for(i <-1 to 3, j <- 1 to 3) print ((10*i+j)+ " ")
 for(i <-1 to 3, j <- 1 to 3 if i != j) print ((10*i+j)+ " ")
 ```
 
+> // 打印12 13 21 23 31 32
+
 还可以使用任意多的定义，引入可以在循环中使用的变量：
 
 ```scala
@@ -93,6 +95,8 @@ for( i <- 1 to 3; from = 4-i; j <- from to 3)  print ((10*i+j)+ " ")
 ```scala
 for( i <- 1 to 10) yield i % 3
 ```
+
+> // 生成 Vector(1,2,0,1,2,0,1,2,0,1)
 
 这类循环叫做 `for` 推导式。
 

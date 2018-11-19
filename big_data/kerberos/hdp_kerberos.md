@@ -1,3 +1,5 @@
+[TOC]
+
 # HDP Kerberos
 
 文档是基于`HDP 3.0` 环境进行说明，Kerberos使用的是`MIT KDC` 模式，安装了 Ranger 进行权限授权操作。
@@ -304,19 +306,19 @@ hadoop.proxyuser.HTTP.groups=true
     System.setProperty("java.security.krb5.conf", classPath + "krb5.conf")
     //    System.setProperty("sun.security.krb5.debug", "true")
     //    System.setProperty("sun.security.spnego.debug", "true")
-    classOf[org.apache.phoenix.jdbc.PhoenixDriver]
-    val conf = HBaseConfiguration.create
-    conf.set("hbase.zookeeper.quorum", "testdmp3.fengdai.org,testdmp4.fengdai.org,testdmp5.fengdai.org")
-    conf.set("zookeeper.znode.parent", "/hbase-secure")
-    conf.set("hbase.zookeeper.property.clientPort", "2181")
-    conf.set("hbase.master", "testdmp4.fengdai.org:16000")
-    conf.set("hadoop.security.authentication", "kerberos")
-    conf.set("hbase.security.authentication", "Kerberos")
-    conf.set("hbase.master.kerberos.principal", "hbase/_HOST@EXPER.ORG")
+     //classOf[org.apache.phoenix.jdbc.PhoenixDriver]
+    // val conf = HBaseConfiguration.create
+    // conf.set("hbase.zookeeper.quorum", "testdmp3.fengdai.org,testdmp4.fengdai.org,testdmp5.fengdai.org")
+   //  conf.set("zookeeper.znode.parent", "/hbase-secure")
+   //  conf.set("hbase.zookeeper.property.clientPort", "2181")
+   //  conf.set("hbase.master", "testdmp4.fengdai.org:16000")
+   //  conf.set("hadoop.security.authentication", "kerberos")
+    // conf.set("hbase.security.authentication", "Kerberos")
+    // conf.set("hbase.master.kerberos.principal", "hbase/_HOST@EXPER.ORG")
       // phoenix.queryserver.spnego.auth.disabled
-    conf.set(QueryServices.QUERY_SERVER_SPNEGO_AUTH_DISABLED_ATTRIB, "true")
+    // conf.set(QueryServices.QUERY_SERVER_SPNEGO_AUTH_DISABLED_ATTRIB, "true")
       // phoenix.queryserver.disable.kerberos.login
-    conf.set(QueryServices.QUERY_SERVER_DISABLE_KERBEROS_LOGIN, "false")
+    // conf.set(QueryServices.QUERY_SERVER_DISABLE_KERBEROS_LOGIN, "false")
 
     val instance = new HikariDataSource()
     instance.setJdbcUrl("jdbc:phoenix:thin:url=http://testdmp7.fengdai.org:8765?doAs=hbase;serialization=PROTOBUF;authentication=SPNEGO;principal=hbase-exper@EXPER.ORG;keytab=" + classPath + "hbase.headless.keytab")
@@ -411,6 +413,10 @@ hadoop.proxyuser.HTTP.groups=true
 7、`main : run as user is testdcpods main : requested yarn user is testdcpods User testdcpods not found`
 
 **A:** 没有在Linux下面创建用户。
+
+8、提交到yarn的用户与Phoenix用户可以不一致吗？
+
+**A:** 可以不一致，只要各自相应的权限拥有即可
 
 ## Livy Client
 
@@ -762,3 +768,13 @@ User holger_gov does not have privileges to create policy. User has to have ADMI
 ![image-20181112102027692](assets/image-20181112102027692.png)
 
 Spark Interpreters 中必须存在`SPARK_HOME`配置。
+
+## Yarn
+
+### 如何实现应用隔离
+
+使用 Kerberos 进行权限的控制，就可以对 yarn 中的应用进行隔离，不同的用户只能看到自己的提交的应用，但也可以通过 Ranger 对权限进行授权。
+
+### 如何实现资源的隔离
+
+通过 Yarn 的队列可以实现不同租户之间的资源的隔离。
