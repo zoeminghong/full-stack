@@ -363,7 +363,7 @@ hadoop.proxyuser.HTTP.groups=true
 
 2、`Caused by: java.lang.RuntimeException: Failed to perform Kerberos login`
 
-**A：**principal与keytab不一致，导致认证不通过
+**A：** principal与keytab不一致，导致认证不通过，或者当前keytab不存在相应的权限，需要对其合并应该拥有的权限进去
 
 3、`The KEYTAB does not reference a normal, existent file: /etc/security/keytabs/testdcpods-group.keytab`
 
@@ -778,3 +778,51 @@ Spark Interpreters 中必须存在`SPARK_HOME`配置。
 ### 如何实现资源的隔离
 
 通过 Yarn 的队列可以实现不同租户之间的资源的隔离。
+
+## Kylin
+
+https://kyligence.io/zh/2018/06/14/using-kerberos-cdh-deploy-kylin/
+
+
+
+## Q&A
+
+1、
+
+```
+Tue May 08 18:58:37 UTC 2018, null, java.net.SocketTimeoutException: callTimeout=60000,
+callDuration=68287: Call to c1103-node4.squadron-labs.com/172.25.34.18:16020 failed on local
+exception: org.apache.hadoop.hbase.exceptions.ConnectionClosingException:
+Connection to c1103-node4.squadron-labs.com/172.25.34.18:16020 is closing.
+Call id=9, waitTime=12 row 'SYSTEM:CATALOG,,' on table 'hbase:meta' at region=hbase:meta,,
+1.1588230740, hostname=c1103-node4.squadron-labs.com,16020,1525805611312, seqNum=0
+ -> RetriesExhaustedException: Failed after attempts=36, exceptions:
+Tue May 08 18:58:37 UTC 2018, null, java.net.SocketTimeoutException: callTimeout=60000,
+callDuration=68287: Call to c1103-node4.squadron-labs.com/172.25.34.18:16020 failed on
+local exception: org.apache.hadoop.hbase.exceptions.ConnectionClosingException:
+Connection to c1103-node4.squadron-labs.com/172.25.34.18:16020 is closing.
+Call id=9, waitTime=12 row 'SYSTEM:CATALOG,,' on table 'hbase:meta' at region=hbase:meta,,
+1.1588230740, hostname=c1103-node4.squadron-labs.com,16020,1525805611312, seqNum=0
+ -> SocketTimeoutException: callTimeout=60000, callDuration=68287:
+Call to c1103-node4.squadron-labs.com/172.25.34.18:16020 failed on local exception:
+org.apache.hadoop.hbase.exceptions.ConnectionClosingException: Connection to
+c1103-node4.squadron-labs.com/172.25.34.18:16020 is closing. Call id=9, waitTime=12 row
+'SYSTEM:CATALOG,,' on table 'hbase:meta' at region=hbase:meta,,1.1588230740,
+hostname=c1103-node4.squadron-labs.com,16020,1525805611312, seqNum=0 ->
+ConnectionClosingException: Call to c1103-node4.squadron-labs.com/172.25.34.18:16020
+failed on local exception: org.apache.hadoop.hbase.exceptions.ConnectionClosingException:
+Connection to c1103-node4.squadron-labs.com/172.25.34.18:16020 is closing. Call id=9,
+waitTime=12 -> ConnectionClosingException:
+Connection to c1103-node4.squadron-labs.com/172.25.34.18:16020 is closing.
+Call id=9, waitTime=12. Error -1 (00000) null
+
+java.lang.RuntimeException: java.sql.SQLException:
+```
+
+**A：** When performing SPNEGO authentication, the impersonation of end users to HTTP user must be allowed. The above error occurs when that impersonation is not allowed.
+
+```json
+hadoop.proxyuser.HTTP.groups=*
+hadoop.proxyuser.HTTP.hosts=*
+```
+

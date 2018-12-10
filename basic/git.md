@@ -754,6 +754,9 @@ $ git show [commit]:[filename]
 
 # 显示当前分支的最近几次提交
 $ git reflog
+
+# 查看本地仓库绑定的远程仓库信息
+$ git remote -v
 ```
 
 ### 远程同步
@@ -1087,7 +1090,7 @@ git remote add upstream [fork源的远程仓库地址]
 git pull upstream master
 # 5、commit&push到自己的仓库
 git push origin master
-# 6、pull request
+# 6、git web 页面 pull request
 # 7、等待对方同意
 ```
 
