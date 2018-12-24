@@ -697,7 +697,30 @@ Client {
 
 http://lab.howie.tw/2013/12/Kerberos-Authentication-with-SPNEGO.html
 
+```shell
+curl --negotiate -u: -X POST \
+  http://test-dmp7.fengdai.org:8999/batches \
+  -H 'Cache-Control: no-cache' \
+  -H 'X-Requested-By: admin' \
+  -H 'Content-Type: application/json' \
+  -H 'Postman-Token: 2ec10f63-65ca-4c5b-a054-fecafc139111' \
+  -H 'X-User-Id: 111' \
+  -d '{
+  "name": "DMP EXPER ODS",
+  "file": "/dmp/zyztest2/storage-ods-1.8.0-SNAPSHOT-jar-with-dependencies.jar",
+  "className": "com.tairanchina.csp.dmp.components.storage.ods.ODSMain",
+  "args": ["-c","http://10.200.23.146:8089/management-admin/","-p","exper","-l","feature_kerberos","--krb5ConfPath","/etc/krb5.conf","--principal","testdcpods","--keyTab","/etc/security/keytabs/testdcpods-group.keytab"],
+"conf":{"spark.yarn.maxAppAttempts":1,"spark.driver.extraJavaOptions":"-Dlog4j.configuration=log4j.properties.template","spark.executor.extraJavaOptions":"-Dlog4j.configuration=log4j.properties.template"},
+  "driverMemory": "1024M",
+  "executorMemory": "1024M",
+  "executorCores": 1,
+  "numExecutors": 6
+}'
+```
 
+> 多租户创建多个jaas文件，在服务中切换会存在缓存问题，无法进行文件路径动态切换，可通过在同一个jaas文件下，创建多个module实现多租户功能，该方法还支持不停服动态修改文件。
+
+https://docs.oracle.com/javase/1.5.0/docs/guide/security/jaas/spec/com/sun/security/auth/module/Krb5LoginModule.html
 
 ## Ranger
 
@@ -717,7 +740,7 @@ Ranger作为授权组件
 
 这将防止除所有者以外的任何人访问任何新的文件或文件夹。
 
-管理员可以通过Ambari更改此属性：Ambari->HDFS->Configs->Advanced->Advanced hdfs-site。
+理员可以通过Ambari更改此属性：Ambari->HDFS->Configs->Advanced->Advanced hdfs-site。
 
 ```shell
 fs.permissions.umask-mode=022
@@ -784,6 +807,49 @@ Spark Interpreters 中必须存在`SPARK_HOME`配置。
 https://kyligence.io/zh/2018/06/14/using-kerberos-cdh-deploy-kylin/
 
 
+
+## Spark
+
+`spark.acls.enable = true`
+
+支持在 spark 重启之后的新应用的yarn页面删除应用、history日志、applicationMaster日志，下载日志。根据 `spark.admin.acls`，`spark.admin.acls.groups` 进行用户和组的配置。
+
+`spark.history.ui.acls.enable = true`
+
+支持查看所有history日志，已经执行完的日志。配置 `spark.history.ui.admin.acls`，
+`spark.history.ui.admin.acls.groups`进行用户和组的控制。
+
+**e.g.**
+
+```xml
+spark.admin.acls:dmpadmin
+spark.admin.acls.groups:dmpadmin
+spark.history.kerberos.enabled: true
+spark.acls.enable: true
+spark.history.ui.acls.enable: true
+spark.history.ui.admin.acls:dmpadmin
+spark.history.ui.admin.acls.groups:dmpadmin
+```
+
+`spark.modify.acls = true`
+
+指定Web UI的修改者列表。
+
+`spark.ui.view.acls = true`
+
+指定Web UI的访问者列表。
+
+https://spark.apache.org/docs/latest/security.html
+
+http://support.huawei.com/hedex/pages/EDOC1100006861YZH0302P/01/EDOC1100006861YZH0302P/01/resources/zh-cn_topic_0085568617.html
+
+https://spark-reference-doc-cn.readthedocs.io/zh_CN/latest/more-guide/monitoring.html
+
+http://jerryshao.me/2018/01/15/spark-security-overview/
+
+[监控和工具 — Spark 2.2.x 中文文档 2.2.1 文档](https://spark-reference-doc-cn.readthedocs.io/zh_CN/latest/more-guide/monitoring.html)
+[Spark Security面面观 - jerryshao blog](http://jerryshao.me/2018/01/15/spark-security-overview/)
+[配置Spark Web UI ACL](http://support.huawei.com/hedex/pages/EDOC1100006861YZH0302P/01/EDOC1100006861YZH0302P/01/resources/zh-cn_topic_0085568617.html)
 
 ## Q&A
 
