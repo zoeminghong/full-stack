@@ -52,9 +52,32 @@
 | 配置项                                  | 值                                                           |
 | --------------------------------------- | ------------------------------------------------------------ |
 | zeppelin.dep.additionalRemoteRepository | spark-packages,http://dl.bintray.com/spark-packages/maven,false; |
-| zeppelin.dep.localrepo                  | local-repo                                                   |
 
-这两个配置项任选其一都可以进行私服的配置，`zeppelin.dep.localrepo`中的值就是上面私服的名称即可。
+修改该配置项可以进行对私服的修改，格式：`id,url,snapshot`
+
+### Notebook方式
+
+```
+%spark_arithmetic_kerberos.dep
+z.reset()
+z.load("com.tairanchina.csp.dmp:spark-jdbc-template:1.8.0-RC")
+```
+
+```
+%spark_arithmetic_kerberos
+import com.tairanchina.csp.dmp.template.spark.jdbc
+```
+
+> 分成两个Paragraph进行，在同一个Paragraph是不行的
+
+使用第三方库
+
+```
+%dmp_spark.dep
+z.reset()
+z.addRepo("trc").url("http://121.41.17.205:18081/nexus/content/groups/public")
+z.load("com.tairanchina.csp.dmp:spark-hdfs-template:1.6.0-RC")
+```
 
 ## 支持语言
 

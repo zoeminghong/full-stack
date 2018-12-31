@@ -28,8 +28,6 @@ usermod -a -G dmp dmpGroup
 
 ![image-20181220202507908](assets/image-20181220202507908-5308707.png)
 
-a
-
 ### Audit
 
 #### Access
