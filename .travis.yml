@@ -17,9 +17,9 @@ script:
 # - npm install
 # - git clone https://github.com/zoeminghong/full-stack.git
 addons:
-  ssh_known_hosts: 67.209.184.19
+  ssh_known_hosts: 67.209.187.243
 after_success:
-- ssh root@67.209.184.19 -p 29869 -o StrictHostKeyChecking=no 'cd /etc/nginx/www/full-stack &&
+- ssh root@67.209.187.243 -p 29869 -o StrictHostKeyChecking=no 'cd /etc/nginx/www/full-stack &&
   git pull'
 notifications:
   email: false

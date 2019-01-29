@@ -7,6 +7,6 @@
 轻松上手，一学就会
 
 [GitHub](https://github.com/zoeminghong/full-stack)
-[Get Started](/README)
+[Get Started](/README)	
 
-![color](#fefefe)
+![color](#000000)
