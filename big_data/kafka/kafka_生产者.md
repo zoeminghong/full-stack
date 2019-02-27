@@ -1,3 +1,7 @@
+## 生产者
+
+生产者在 Kafka 中是必须存在的
+
 ## acks
 
 Kafka提供三种消息确认机制（acks），通过属性`request.required.acks`设置。

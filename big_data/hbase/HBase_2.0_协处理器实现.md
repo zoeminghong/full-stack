@@ -504,7 +504,7 @@ Anyway，这两种方案都需要解决历史数据的问题和还有需要注�
 - 发现已经更新包，协处理器还是在执行历史代码？
 
   当更新包的时候，要进行包名的变更，否则，可能会出现类似于缓存的现象问题。
-  
+
 - HDFS NameNode 存在多节点的场景，那么怎么保证动态切换呢？
 
   在 `coprocessor` 参数下不使用 `hdfs url`
@@ -594,7 +594,15 @@ Anyway，这两种方案都需要解决历史数据的问题和还有需要注�
       </dependencies>
   ```
 
-  
+- `ERROR: org.apache.hadoop.hbase.DoNotRetryIOException: error in opening zip file Set hbase.table.sanity.checks to false at conf or table descriptor if you want to bypass sanity checks`
+
+- ```xml
+  //hbase-site.xml
+  <property>
+    <name>hbase.table.sanity.checks</name>
+    <value>false</value>
+  </property>
+  ```
 
 ### 待确认
 

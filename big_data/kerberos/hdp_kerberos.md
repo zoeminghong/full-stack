@@ -418,6 +418,12 @@ hadoop.proxyuser.HTTP.groups=true
 
 **A:** 可以不一致，只要各自相应的权限拥有即可
 
+10、`KrbException: Fail to create credential. (63) - No service creds`
+
+或者 `Failed to initialize pool: Failed to execute HTTP Request, got HTTP/401` 
+
+**A:** 将 `krb5.conf` 配置中的 `default_realm` 设为当前环境的 `realm`。
+
 ## Livy Client
 
 ```scala
