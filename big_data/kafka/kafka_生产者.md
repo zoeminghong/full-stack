@@ -1,6 +1,34 @@
 ## 生产者
 
-生产者在 Kafka 中是必须存在的
+生产者在 Kafka 中是必须存在的角色。在 Kafka 中 `ReplicatManager` **负责将生产者发送的消息写入到 Leader 副本、管理 Follower 副本与 Leader 副本之间的数据同步以及副本角色之间的转换。**
+
+消息发送流程：
+
+1. 客户端调用 `KafkaProduce.send()` 方法
+2. `KafkaApis.handleProducerRequest()` 方法调用 `ReplicaManager.appendMessages()` 方法将消息追加到相应的分区的 Leader 副本中
+3. 从 Leader 副本同步数据到各 Follower 副本中
+4. 向生产者做出响应
+
+在消息未被分区的所有 Follower 副本从 Leader 副本同步更新完成之前，`ProduceRequest` 的 acks 为 `-1` ，此时，无法进行下一条消息的操作。
+
+`DelayedProduce` 其作用就是在 acks 为 -1 时，延迟回调 responseCallback 向生产者做出相应，直至所有 Follower 副本从 Leader 副本同步更新完成后，才响应生产者。
+
+**猜想**
+
+- 副本数太多会导致生产者的响应时间太长，TPS 下降
+- 在写入数据至 Leader 和同步数据至 Follower 的过程中出现异常，会如何处理？DelayedProduce 可能出现 delayMS 超时的情况
+
+## Follower 副本同步
+
+在 Follower 副本进行从 Leader 副本处同步数据的时，会发起 **FetchRequest** 请求。
+
+**FetchRequest** 是由 `KafkaApis.handleFetchRequest()` 方法处理的，在该方法中 `ReplicaManager.fetchMessage()` 方法从相应的分区的 Leader 副本拉取消息。
+
+`ReplicaManager.fetchMessage()` 方法中会创建 **DelayedFetch** 延迟操作，用于处理拉取数据操作。
+
+##### 为什么在拉取数据的时候需要延迟操作呢？
+
+是为了让当前拉取获得足够的消息数据。
 
 ## acks
 

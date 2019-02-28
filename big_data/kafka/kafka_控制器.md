@@ -1,3 +1,7 @@
+控制器选举方案？
+
+
+
 ## 控制器
 
 Kafka在启动的时候，每个代理都会实例化一个 kafkaController，并将该代理的brokerId 注册到 Zookeeper 的相应节点当中。Kafka集群会选出一个代理作为 Leader，即 Leader 控制器。
@@ -8,6 +12,20 @@ Kafka在启动的时候，每个代理都会实例化一个 kafkaController，�
 - 分区的管理
 - 副本的管理
 - 代理故障转移处理
+
+### 术语
+
+**controller_epoch:** 用于记录 `Leader Controller` 的变更次数，从 0 开始。每每变更一次，就加 1，若请求的中的 controller_epoch 值与服务端值不一致，就意味着 `Leader Controller`  发生了变更。该值在 ZK 中位于 `/controller_epoch` 目录。
+
+**zkVersion:** 更新 ZK 信息时的乐观锁。
+
+**leader_epoch:** 分区副本 Leader 更新次数。
+
+**assgined replica:** 已分配副本。每个分区中在线存在的副本统称为已分配副本，简写：AR。
+
+**ISR:** 与分区的 Leader 保持同步的副本列表。
+
+**preferred replica:** 优先副本。在 AR 列表中位于第一个的副本成为优先副本。正常情况下，优先副本就是 Leader 副本。Kafka 要尽可能的保证优先副本在代理集群中均匀分布，保证服务的负载均衡。
 
 ### 控制器初始化
 
@@ -38,6 +56,7 @@ kafkaController 实例化主要完成以下工作：
 - 创建用于将当前代理选举为控制器的 ZooKeeperLeaderElector 选举器对象。控制器选举策略是在 zk的 `/controller` 路径下创建一个临时节点，并注册一个 LeaderChangeListener，来监听临时节点的变化，**当新的控制器信息被保存下来时，会触发该监听器的 handleDataChange()方法进行相应处理，当监听器监听到 `/controller` 路径下控制器信息被删除时，将触发 onControllerResignation() 回调方法，同时触发重新选举机制。**
 
 - 创建一个独立定时任务 KafkaScheduler，**该代理为 Leader控制器期间有效。** 不再试代理的时候， 调用 onControllerResignation() 方法关闭定时器。
+
   - 控制器进行平衡操作
 
 - 声明一个对主题操作管理的 TopicDeletionManager 对象。
