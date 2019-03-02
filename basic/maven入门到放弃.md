@@ -216,7 +216,7 @@ true 不会传递，false会传递（默认）
 
 #### DependencyManagement
 
-为了实现对依赖的版本进行统一的管理，方便依赖的升级、变更等场景，就希望能在父工程中对所有的依赖都进行统一的管理。但这个管理不会自动在子工程进行依赖，子工程需要父工程中所需要的依赖进行显式依赖，只不过此时不需要进行 version 的设置。
+为了实现对依赖的版本进行统一的管理，方便依赖的升级、变更等场景，就希望能在父工程中对所有的依赖都进行统一的管理。但这个管理不会自动在子工程进行依赖，子工程需要父工程中所需要的依赖进行显式依赖，不过此时不需要进行 version 的设置。
 
 `parent`
 
@@ -262,6 +262,8 @@ true 不会传递，false会传递（默认）
      </dependencies>
 </dependencyManagement>
 ```
+
+在 `dependencyManagement、dependences` 中的依赖 `exclusion、scope` 属性是具有传递性的。optional 则不存在该特性。
 
 #### 依赖性传递
 
@@ -846,3 +848,7 @@ mvn spring-boot:run -Drun.profiles=foo,bar
 - project.artifactId
 - project.version
 - finalName 标签用来确定最终包名
+
+### 工具
+
+[Maven Helper](https://github.com/harishkannarao/MavenSurefireFailsafeExamples) : 帮助解决包冲突问题。
