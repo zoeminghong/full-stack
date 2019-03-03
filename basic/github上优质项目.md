@@ -140,3 +140,20 @@ MacOS开源程序列表
 
 - [Github 地址](https://github.com/Avik-Jain/100-Days-Of-ML-Code)
 
+## chrome-plugin-demo
+
+Chrome插件开发全攻略
+
+- [Github 地址](https://github.com/sxei/chrome-plugin-demo)
+
+## architect-awesome
+
+后端架构师技术图谱
+
+- [Github 地址](https://github.com/xingshaocheng/architect-awesome)
+
+## awesome-cheatsheets
+
+Linux 指令超级速查表
+
+- [Github 地址](https://github.com/skywind3000/awesome-cheatsheets)
