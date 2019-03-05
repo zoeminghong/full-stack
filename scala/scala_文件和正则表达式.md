@@ -102,6 +102,15 @@ val pattern = "[0-9]+".r
 
 使用 `replaceFirstIn` 或者 `replaceAllIn` 替换首个或者全部匹配字符串。
 
+```scala
+val encryptPattern ="""\$\{\S+\}""".r
+val r = encryptPattern.replaceAllIn(param, s => {
+      s.group(0)
+   	  ....
+    })
+    r
+```
+
 ## 正则表达式组
 
 分组可以让我们方便的获取正则表达式的子表达式。

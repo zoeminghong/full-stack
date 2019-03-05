@@ -14,3 +14,5 @@
 
 [GC 分析](https://gceasy.io/)
 
+[设计数据密集型应用 - 中文翻译](https://vonng.gitbooks.io/ddia-cn/content/)
+
