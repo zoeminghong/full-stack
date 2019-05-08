@@ -547,6 +547,8 @@ git remote update [group]
 git remote rename [origin] [new name]
 # 修改远程仓库地址
 git remote set-url [origin] [git url]
+# 更新本地远程仓库信息
+git remote update origin --prune
 ```
 
 ### push
@@ -1306,6 +1308,32 @@ git branch -d tmp
 # 只删除所有untracked的文件
 git clean -df
 ```
+
+## 问题解析
+
+- 提交到 remote 失败
+
+```shell
+ git push origin master -u                               
+Enumerating objects: 18254, done.
+Counting objects: 100% (18254/18254), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (6590/6590), done.
+Writing objects: 100% (18254/18254), 6.44 MiB | 14.95 MiB/s, done.
+Total 18254 (delta 6416), reused 16414 (delta 5403)
+remote: Resolving deltas: 100% (6416/6416), done.
+remote: GitLab: 
+remote: A default branch (e.g. master) does not yet exist for psd/dew-trc
+remote: Ask a project Owner or Maintainer to create a default branch:
+remote: 
+remote:   https://gitlab.trc.com/psd/dew-trc/project_members
+remote: 
+To gitlab.trc.com:psd/dew-trc.git
+ ! [remote rejected]   master -> master (pre-receive hook declined)
+error: failed to push some refs to 'git@gitlab.trc.com:psd/dew-trc.git'
+```
+
+原因：远程仓库是新建的，不存在分支，第一次提交的时候需要创建分支，同时，用户账号没有创建分支权限，导致无法提交。
 
 ## Tips
 

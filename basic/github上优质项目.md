@@ -157,3 +157,15 @@ Chrome插件开发全攻略
 Linux 指令超级速查表
 
 - [Github 地址](https://github.com/skywind3000/awesome-cheatsheets)
+
+## gasmask
+
+Mac Host 配置工具
+
+- [Github 地址](https://github.com/2ndalpha/gasmask/releases)
+
+## iina
+
+Mac 万能视频播放器
+
+[Github 地址](https://github.com/iina/iina)
