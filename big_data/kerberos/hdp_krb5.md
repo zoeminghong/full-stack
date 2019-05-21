@@ -78,3 +78,21 @@ Krb5.conf作为身份验证模块，其中包含了很多环境信息。我们�
        .fubar.org = FUBAR.ORG
 ```
 
+[Kerberos ticket lifetime及其它 - Morven.Huang - 博客园](https://www.cnblogs.com/morvenhuang/p/4607790.html)
+[java - How to renew expiring Kerberos ticket in HBase? - Stack Overflow](https://stackoverflow.com/questions/41453395/how-to-renew-expiring-kerberos-ticket-in-hbase)
+[java - usergroupinformation kerberos example - Should I call ugi.checkTGTAndReloginFromKeytab() before every action on hadoop? - CODE Q&A Solved](https://code.i-harness.com/en/q/2103564)
+https://stackoverrun.com/cn/q/11408414
+[hadoop - Kerberos票据未能通过java代码续约长时间运行的工作](https://stackoverrun.com/cn/q/12820351)
+[HBase Kerberos connection renewal strategy - Stack Overflow](https://stackoverflow.com/questions/33211134/hbase-kerberos-connection-renewal-strategy)
+[java - Should I call ugi.checkTGTAndReloginFromKeytab() before every action on hadoop? - Stack Overflow](https://stackoverflow.com/questions/34616676/should-i-call-ugi-checktgtandreloginfromkeytab-before-every-action-on-hadoop)
+[Connecting Hbase to Elasticsearch in 10 min or less](https://lessc0de.github.io/connecting_hbase_to_elasticsearch.html)
+https://endymecy.gitbooks.io/elasticsearch-guide-chinese/content/elasticsearch-river-jdbc.html
+
+[kerberos的tgt时间理解-菜光光的博客-51CTO博客](http://blog.51cto.com/caiguangguang/1383723)
+
+[使用Hbase协作器(Coprocessor)同步数据到ElasticSearch - fxsdbt520的博客 - CSDN博客](https://blog.csdn.net/fxsdbt520/article/details/53884338)
+[面向高稳定，高性能之-Hbase数据实时同步到ElasticSearch(之二) - zhulangfly的专栏 - CSDN博客](https://blog.csdn.net/zhulangfly/article/details/73604449)
+[使用Hbase协作器(Coprocessor)同步数据到ElasticSearch - fxsdbt520的博客 - CSDN博客](https://blog.csdn.net/fxsdbt520/article/details/53884338)
+[Hbase 2.0 RegionObserver使用 - jast - CSDN博客](https://blog.csdn.net/zhangshenghang/article/details/83275963)
+http://www.zhyea.com/2017/04/13/using-hbase-coprocessor.html
+[Hbase 2.0 Observer 未生效 - HBase技术社区](http://hbase.group/question/182)

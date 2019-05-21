@@ -340,3 +340,7 @@ is spoofing requests. Check your TLS certificate setup as described in documenta
 - https://github.com/floragunncom/search-guard/issues/154
 - https://www.programcreek.com/java-api-examples/?api=org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest
 - https://github.com/floragunncom/search-guard/issues/366
+- [Elasticsearch Java API 索引的增删改查（二） - 简书](https://www.jianshu.com/p/42b0c4cd0232)
+- [Elasticsearch Java Client用户指南 - 简书](https://www.jianshu.com/p/4f77efdd2c55)
+- https://www.elastic.co/guide/en/elasticsearch/client/java-rest/5.3/_performing_requests.html
+- [SearchGuard 实践 - weixin_34116110的博客 - CSDN博客](https://blog.csdn.net/weixin_34116110/article/details/86957092)

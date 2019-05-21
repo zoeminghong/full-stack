@@ -2,7 +2,14 @@
 
 **说在文前**
 
-本文内容是基于 `Centos 7、HDP 3.0.0、HBase 2.0.0、Python 2.7` 环境下，其他环境的童鞋选择性进行参考
+本文内容是基于 `Centos 7、HDP 3.0.0、HBase 2.0.0、Python 2.7` 环境下，其他环境的童鞋选择性进行参考。
+
+Thrift 安装在 HBase 服务节点上即可。
+
+HBase 实现了两套Thrift Server服务，有两种 Thrift IDL 文件，提供了两套数据结构:
+
+- 第一套有 TCell， ColumnDescriptor，TRegionInfo 等，它的 API 比较全，它不仅有读写 API，同时也有创建删除等 API；
+- 第二套有 TTimeRange, TColumn, TColumnValue 等，它更加接近 HBase Java API 的调用方式，但是它的 API 比较少，只有读写表的API），它们最后都是通过 HBase Client 的 Java  API 来完成操作。
 
 ## 安装 Thrift
 
@@ -51,6 +58,10 @@ cd /usr/hdp/3.0.0.0-1634/hbase/include/thrift/
 thrift -gen py hbase1.thrift 或 thrift -gen py hbase2.thrift
 ```
 
+执行完该命令之后，会生成一个 gen-py 目录，将该目录下 hbase 文件下载到本地项目中。(hbase-1 请忽略)
+
+![image-20190509111551665](assets/image-20190509111551665.png)
+
 ### 启动 Thrift 服务
 
 ```
@@ -85,6 +96,8 @@ if __name__ == '__main__':
     client.get()
     print(client.getTableNames())
 ```
+
+> hbase 源于 上文中 hbase 目录文件包
 
 #### Thrift_2 模式
 
@@ -204,14 +217,13 @@ if __name__ == '__main__':
 #### Thrift_2 模式
 
 ```python
-from thrift import Thrift
-from thrift.transport import TSocket
-from thrift.transport import TTransport
+#!/usr/bin/env python
 from thrift.protocol import TBinaryProtocol
-from thrift.protocol import TCompactProtocol
+from thrift.transport import TSocket
+
 from hbase import THBaseService
-from hbase.ttypes import  *
-import os
+from hbase.ttypes import *
+
 # Apache HBase Thrift server coordinates (network location)
 thriftServer = "dev-dmp5.fengdai.org"
 thriftPort = 9090
@@ -222,14 +234,12 @@ thriftPort = 9090
 saslServiceName = 'hbase'
 
 # HBase table and data information
-tableName = 'demo_table'
+tableName = 'DMP:demo'
 row = 'test2'
-coulumnValue1 = TColumnValue('cf', 'title', 'test')#ColumnFamily，Column，Value
-coulumnValue2 = TColumnValue('cf', 'content', 'hello world')
-coulumnValues = [coulumnValue1, coulumnValue2]
+coulumnValue1 = TColumnValue('cf', 'name')
+coulumnValues = [coulumnValue1]
 if __name__ == '__main__':
     socket = TSocket.TSocket(thriftServer, thriftPort)
-    #transport = TTransport.TBufferedTransport(socket)
     transport = TTransport.TSaslClientTransport(socket,host=thriftServer,service=saslServiceName,mechanism='GSSAPI')
     protocol = TBinaryProtocol.TBinaryProtocol(transport)
     client = THBaseService.Client(protocol)
@@ -238,6 +248,7 @@ if __name__ == '__main__':
     get = TGet(row=row, columns=coulumnValues)
     result = client.get(tableName,get)
     print  result
+
 ```
 
 ## 问题
@@ -269,6 +280,59 @@ thriftServer = "dev-dmp5.fengdai.org"
 3、thrift.transport.TTransport.TTransportException: TSocket read 0 bytes
 
 访问其实已经是通了，一直以为是客户端的问题，由于代码是通过 binary 方式访问，`hbase.regionserver.thrift.http=false ` 应该设置为 false。
+
+4、out 日志中查看到错误信息是认证的问题？
+
+`hbase.thrift.kerberos.principal` 肯定是配置错误了
+
+## 高级拓展
+
+### 启动方式选择
+
+Thrift服务启动有两种方式： 
+1. 每个节点上启动thrift服务
+
+```
+./bin/hbase-daemon.sh start thrift
+```
+
+2. 仅在Master上启动线程池服务
+
+```
+./bin/hbase thrift start -threadpool
+```
+
+由于系统Hbase集群节点数很多，第二种方式更简单些
+
+### 优化配置项
+
+`Hbase-site.xml`
+
+```xml
+<property>
+        <name>hbase.regionserver.handler.count</name>
+        <value>400</value>
+    </property>
+    <property>
+            <name>hbase.thrift.minWorkerThreads</name>
+                <value>1000</value>
+        </property>
+    <property>
+            <name>hbase.thrift.maxWorkerThreads</name>
+                <value>2000</value>
+        </property>
+    <property>
+             <name>hbase.thrift.server.socket.read.timeout</name>
+             <value>6000000</value>
+             <description>eg:milisecond</description>
+     </property>
+    <property>
+             <name>hbase.regionserver.thrift.maxreadlength</name>
+             <value>0</value>
+             <description>0:not check data length</description>
+     </property>
+
+```
 
 ## 相关文章
 
