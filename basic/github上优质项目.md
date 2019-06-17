@@ -168,4 +168,16 @@ Mac Host 配置工具
 
 Mac 万能视频播放器
 
-[Github 地址](https://github.com/iina/iina)
+- [Github 地址](https://github.com/iina/iina)
+
+## Motrix
+
+一款全能的下载工具
+
+- [Github 地址](https://github.com/agalwood/Motrix)
+
+## Kubernetes中文指南/云原生应用架构实践手册
+
+Kubernetes中文指南
+
+[Github地址](https://github.com/rootsongjc/kubernetes-handbook)

@@ -281,3 +281,10 @@ Spark_Home没有指定，需要在相应的解释器中添加
 SPARK_HOME /usr/hdp/current/spark2-client/
 ```
 
+问题：
+
+```shell
+java.lang.RuntimeException: id: admin: no such user
+```
+
+可以通过重启或者尝试restart interpreter

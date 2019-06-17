@@ -29,3 +29,6 @@ Col 可以使用 $ 代替
 
 https://blog.cloudera.com/blog/2017/12/hadoop-delegation-tokens-explained/
 
+
+
+<https://help.aliyun.com/document_detail/93204.html?spm=5176.10695662.1996646101.searchclickresult.fcc6adb7ZCmPRA>

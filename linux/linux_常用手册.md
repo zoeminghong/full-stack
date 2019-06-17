@@ -10,3 +10,14 @@ ls -lh
 jar xvf <包名>
 ```
 
+### Shell 脚本接收参数含有空格
+
+```shell
+# 正常使用的时候,cmd test1 test2 test3
+echo ${2}
+# 第二个参数值, test2
+# 含有空格的时候 cmd test1 test2 test3
+echo ${@:2}
+# 从第二个参数开始 test2 test3
+```
+

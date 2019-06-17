@@ -898,3 +898,7 @@ hadoop.proxyuser.HTTP.groups=*
 hadoop.proxyuser.HTTP.hosts=*
 ```
 
+2、no user password
+
+检查一下是否 principal 名和 keytab 路径是否正确。
+

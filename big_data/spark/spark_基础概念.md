@@ -1,5 +1,15 @@
 # Spark基础理解
 
+一个task 每次只能处理一个 partition 的数据
+
+![image-20190522104025987](assets/image-20190522104025987.png)
+
+![image-20190522104309159](assets/image-20190522104309159.png)
+
+一个 executor core 同时只能处理一个 task 任务
+
+
+
 ## Spark SQL
 
 ### DataFrame
