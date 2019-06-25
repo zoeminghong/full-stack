@@ -122,9 +122,17 @@ dop:dop_user_label                         0 r STARTED    216  193.9kb 10.200.13
 dop:dop_user_label                         0 p STARTED    216  193.9kb 10.200.131.189 dmp-node3
 ```
 
+## 关于 ElasticSearch 所有列和部分列数据查询性能记录
 
+> 说明：在没有关闭 `_all` 情况下测试，字段 100 多个，数据体量 200多万条。
 
-### 拓展
+结论：`select *` 与指定字段查询时间差异不大。
+
+![92951AC8-6047-4440-AF6F-CB8D6C4FC072](assets/92951AC8-6047-4440-AF6F-CB8D6C4FC072.png)
+
+![AED75ABF-56D7-4647-A949-0C79B8D7042C](assets/AED75ABF-56D7-4647-A949-0C79B8D7042C.png)
+
+![59B2AC80-3CD2-409b-8E81-B67044371CDD](assets/59B2AC80-3CD2-409b-8E81-B67044371CDD.png)拓展
 
 [elasticsearch Doc](https://www.elastic.co/guide/en/elasticsearch/hadoop/master/spark.html#spark-sql-streaming)
 
@@ -139,6 +147,10 @@ dop:dop_user_label                         0 p STARTED    216  193.9kb 10.200.13
 [kibana 配置项](https://www.elastic.co/guide/en/kibana/current/settings.html)
 
 [Elasticsearch索引的性能注意事项](https://www.elastic.co/cn/blog/performance-considerations-elasticsearch-indexing)
+
+[性能优化](https://www.easyice.cn/archives/207)
+
+[性能优化](https://blog.csdn.net/laoyang360/article/details/85109769)
 
 ## opendistro
 
