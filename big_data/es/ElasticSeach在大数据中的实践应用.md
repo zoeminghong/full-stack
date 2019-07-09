@@ -1,6 +1,35 @@
 ## ElasticSeach在大数据中的实践应用
 
+## ElasticSearch SQL
+
+API：https://admin:admin@10.200.131.184:9200/_opendistro/_sql
+
+```shell
+POST/GET
+{
+  "query":"select * from dop:dop_visit_event_info where  _id =  '2019-06-27 10:43:00.388|000001287429205000000141040411000002067845529'"
+}
+
+```
+
+[语法](https://juejin.im/entry/5c137dca5188257e2a7b4e93)
+
+[官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/current/xpack-sql.html)
+
 ## ElasticSeach API
+
+### Index
+
+#### 修改索引 `index/type/_id`
+
+```shell
+PUT twitter/_doc/1
+{
+    "user" : "kimchy",
+    "post_date" : "2009-11-15T14:12:12",
+    "message" : "trying out Elasticsearch"
+}
+```
 
 ### 集群信息
 

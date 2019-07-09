@@ -34,6 +34,58 @@ HStore由一个Memstore及一系列HFile组成。
 
 ![IMG_6327](assets/IMG_6327.jpg)
 
+## 热点问题
+
+以时间戳作为行键，当大量的同一时间的数据执行插入操作时，负责处理该批数据的 Region 就会成为一个热点，写入的性能取决于单个 Region 的吞吐能力，并且也使该 Region 所在的服务器受到了风险。
+
+## 列族
+
+只有不同的列族同时被查询的可能性比较低的时候，才使用多列族。
+
+
+
+## HFile
+
+HFile 由多个数据块组成。数据块索引记录着每个数据块的起始键。数据块越小，索引越大，因而占用的内存空间越大，加载进内存的数据块更小，随机查询性能更好。
+
+```
+# 默认 65536 Bytes ,64KB
+create 'mytable',{NAME => 'clofam1',BLOCKSIZE=>'65536'}
+```
+
+顺序扫描访问的时候，可以考虑将缓存关闭，释放资源给其他的表或者同一个表的不同列族。**顺序扫描会多次倒腾缓存，导致应该通过缓存优化查询性能的数据被排挤。**
+
+```
+# 默认打开的
+create 'mytable',{NAME => 'clofam1',BLOCKSIZE=>'false'}
+```
+
+## flush时机（触发条件） 
+
+- MemStore级别限制
+
+   Region中任意一个MemStore的大小超过上限（hbase.hregion.memstore.flush.size，默认128MB），会触发MemStore刷新
+
+- HRegion 级别限制
+
+   当Region中所有的MemStore的总和大小超过上限（hbase.hregion.memstore.block.multiplier * hbase.hregion.memstore.flush.size，默认 2* 128M = 256M），会触发MemStore刷新
+
+- HRegion Server级别限制
+
+   当一个Regoin server中的所有MemStore的总和大小超过上限（hbase.regionserver.global.memstore.upperLimit * hbase_heapsize，默认40%的JVM内存使用量）回触发**部分MemStore**刷新。刷新的顺序是按照MemStore的大小排序，先刷新最大的MemStore所在的Region，再刷新次大的，直至总体Memstore内存使用量低于阈值（hbase.regionserver.global.memstore.lowerLimit * hbase_heapsize，默认38%的JVM内存使用量）。
+
+- HRegion Server log限制
+
+​       当一个Region Server中HLog数量达到上限（可通过参数hbase.regionserver.maxlogs配置）时，系统会选取最早的一个 HLog对应的一个或多个Region进行flush
+
+- MemStore 定时flush
+
+   默认周期为1小时，确保Memstore不会长时间没有持久化。为避免所有的MemStore在同一时间都进行flush导致的问题，定期的flush操作有20000左右的随机延时。
+
+- client手动flush
+
+​        用户可以通过shell命令 flush ‘tablename’或者flush ‘region name’分别对一个表或者一个Region进行flush。
+
 ## 参数指南
 
 **hbase.hregion.memstore.block.multiplier**
