@@ -2,6 +2,8 @@
 
 [了解HBase](https://mp.weixin.qq.com/s/XNeOceRbpPAUz5_IWLRsyw)
 
+[HBase Shell Command](https://learnhbase.net/2013/03/02/hbase-shell-commands/)
+
 ## HBase Master
 
 HMaster服务器控制HBase集群。您可以启动最多9个备用HMaster服务器，这使得10个HMaster服务器成为主服务器。要启动备份HMaster，请使用`local-master-backup.sh`。对于要启动的每个备份主站，添加一个表示该主站的端口偏移量的参数。每个HMaster使用两个端口（默认为16000和16010）。端口偏移量将添加到这些端口，因此使用偏移量2，备份HMaster将使用端口16002和16012.以下命令使用端口16002 / 16012,16003 / 16013和16005/16015启动3个备份服务器。

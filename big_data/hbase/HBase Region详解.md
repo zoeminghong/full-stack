@@ -1,5 +1,37 @@
 Region 应该被理解为分片的概念进行理解会比较好。
 
+参考文章：
+
+http://bigdata-star.com/archives/1197
+
+## Region的寻址
+
+Region的寻址就是怎么去找到Region在哪个RegionServer上。
+大数据不管什么框架都存在一个元信息管理，**在HBASE中元信息管理是meta表**。
+而之前讲架构的时候说过，**ZK是元信息的入口**。
+我们首先应该知道，META表在哪里？因此第一步：Client请求ZK获取META所在的RegionServer的地址。
+
+```
+[zk: localhost:2181(CONNECTED) 0] get /hbase/meta-region-server
+regionserver:60020
+master
+```
+
+由此我们得到:META元信息表在master机器上。知道了META表在哪，就可以去查找对应的元信息了。
+第二步：去master机器上查找META表，获得我们需要的信息。
+
+```
+hbase(main):010:0> scan 'hbase:meta'
+ROW                                                   COLUMN+CELL                             
+DMP:dop_fdn_v2_cpl_orders,4999999999999998,1560998224746.ed0e7236291bfdca93a77aa4c506568
+ 5.  column=info:serverstartcode, timestamp=1562808909123, value=1562808826219
+                                                                                     
+```
+
+META表告诉了我们：你要的的那个 rowkey 是属于哪个Region范围内？这个Region是在哪个RegionServer上？
+第三步：去对于的RegionServer上，读取你需要的数据。
+第四步：客户端会把meta信息缓存起来，下次操作就不需要去找hbase:meta了。
+
 ## 分裂
 
 直接参见：http://hbasefly.com/2017/08/27/hbase-split/?pwfsbk=l13b81
@@ -7,8 +39,6 @@ Region 应该被理解为分片的概念进行理解会比较好。
 ## 合并
 
 MemStore 每次 Flush 时都会创建一个新 HFile 文件，当HFile变多，回到值读取数据磁头寻址缓慢，因为HFile都分散在不同的位置，为了防止寻址动作过多，数据读取效率相应降低，适当的减少碎片文件，就需要合并HFile。
-
-
 
 ### HFile 合并触发条件
 
@@ -235,5 +265,32 @@ memstoreLowerLimitSize：Memstore刷写的下限，当全局memstore达到这个
 
 如果当前的Memstore占用内存越大，或者触发条件越小，越有可能引发刷写，刷写后HFile增多，就有可能发生HFile过多阻塞。
 
+## HBase Meta表简介
 
+### Meta表作用
 
+我们知道HBase的表是会分割为多个Region的，不同Region分布到不同RegionServer上。Region 是 HBase中分布式存储和负载均衡的最小单元。
+
+所以当我们从客户端读取，写入数据的时候，我们就需要知道我么数据的 Rowkey是在哪个Region的范围以及我们需要的Region是在哪个RegionServer上。
+
+而这正是HBase Meta表所记录的信息。
+
+### Meta表的Rowkey
+
+region所在的 **表名+region的StartKey+时间戳**。而这三者的MD5值也是HBase在HDFS上存储的region的名字。
+
+### Meta表的列族和列
+
+表中最主要的Family：info
+
+info里面包含三个Column：regioninfo, server, serverstartcode。
+
+其中regioninfo就是Region的详细信息，包括StartKey, EndKey 以及每个Family的信息等。server存储的就是管理这个Region的RegionServer的地址。
+
+所以当Region被拆分、合并或者重新分配的时候，都需要来修改这张表的内容。
+
+### Region的定位
+
+第一次读取： 步骤1：读取ZooKeeper中META表的位置。 步骤2：读取.META表中用户表的位置。 步骤3：读取数据。
+
+如果已经读取过一次，则root表和.META都会缓存到本地，直接去用户表的位置读取数据。

@@ -12,6 +12,10 @@
 
 ## Spark SQL
 
+[http://ixiaosi.art/2019/02/18/spark/spark-structured-streaming%E5%88%86%E6%9E%90/](http://ixiaosi.art/2019/02/18/spark/spark-structured-streaming分析/)
+
+https://blog.csdn.net/LS_ice/article/details/81981762
+
 ### DataFrame
 
 一种类表结构的数据结构。一般为RDD、List、Seq等列表形式数据结构转换得到。
