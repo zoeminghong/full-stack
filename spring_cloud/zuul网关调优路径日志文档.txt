@@ -1,0 +1,170 @@
+zuul:
+  semaphore:
+    max-semaphores: 900
+  host:
+    # 最大连接数
+    max-total-connections: 1000
+    # 每个router最大连接数
+    max-per-route-connections: 1000
+    # 连接超时时间
+    connect-timeout-millis: 5000
+    # 响应超时时间
+    socket-timeout-millis: 10000
+  ignoredPatterns: /*/management-admin/**,/management-admin/**
+
+hystrix:
+  threadpool:
+    default:
+      core-Size: 400
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            # 请按实际情况设置配置
+            timeout-in-milliseconds: 10000
+          strategy: THREAD
+
+ribbon:
+  max-connections-per-host: 500
+  max-total-connections: 1000
+  connect-timeout: 5000
+  # 请按实际情况配置
+  read-timeout: 8000
+
+  ===会超时====
+
+  zuul:
+  semaphore:
+    max-semaphores: 900
+  host:
+    # 最大连接数
+    max-total-connections: 1000
+    # 每个router最大连接数
+    max-per-route-connections: 1000
+    # 连接超时时间
+    connect-timeout-millis: 5000
+    # 响应超时时间
+    socket-timeout-millis: 10000
+  ignoredPatterns: /*/management-admin/**,/management-admin/**
+
+hystrix:
+  threadpool:
+    default:
+      core-Size: 400
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            # 请按实际情况设置配置
+            timeout-in-milliseconds: 10000
+          strategy: THREAD
+
+ribbon:
+  max-connections-per-host: 500
+  max-total-connections: 1000
+  connect-timeout: 5000
+  # 请按实际情况配置
+  read-timeout: 8000
+
+  ===接口频繁调用的时候，会出现timeout===
+
+# 性能调优
+zuul:
+  semaphore:
+    max-semaphores: 900
+  host:
+    # 最大连接数
+    max-total-connections: 200
+    # 每个router最大连接数
+    max-per-route-connections: 1000
+    # 连接超时时间
+    connect-timeout-millis: 5000
+    # 响应超时时间
+    socket-timeout-millis: 10000
+  ignoredPatterns: /*/management-admin/**,/management-admin/**
+
+hystrix:
+  threadpool:
+    default:
+      core-Size: 400
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            # 请按实际情况设置配置
+            timeout-in-milliseconds: 15000
+          strategy: THREAD
+
+ribbon:
+  max-connections-per-host: 500
+  max-total-connections: 1000
+  pool-max-threads: 1000
+  pool-min-threads: 500
+  connect-timeout: 5000
+  # 请按实际情况配置
+  read-timeout: 12000
+
+  ===timeout 频率高===
+
+
+  server:
+  port: 8080
+
+# zuul拦截系统相关配置项
+csp:
+  gateway:
+    list:
+      white: ["/foundation-user/register/phone","/foundation-user/login/phone","/foundation-user/login/phone_code","/foundation-user/login/wechat","/foundation-user/login/qq","/foundation-user/login/weibo","/foundation-user/password/reset","/foundation-user/mock/send_code","/foundation-user/qr_login/img","/foundation-user/qr_login/method_check","/foundation-user/user/phone_*/exists","/foundation-tenant/app/app_id_*/pub_key","/foundation-tenant/app/app_id_*/*/server_token","/foundation-tenant/app/app_id_*/breif","/foundation-version-storage/login_status/validate","/foundation-version-storage/service_status/validate","/foundation-version-storage/as_user_info","/foundation-version-storage/tenant_info","/foundation-version-storage/app_info","/foundation-version-storage/service_info","/foundation-auth/auth/inner/**","/foundation-user/swagger-ui.html","/foundation-user/v2/api-docs","/foundation-user/swagger-resources/**","/foundation-user/webjars/**","/foundation-system/swagger-ui.html","/foundation-system/v2/api-docs","/foundation-system/swagger-resources/**","/foundation-system/webjars/**","/foundation-tenant/swagger-ui.html","/foundation-tenant/v2/api-docs","/foundation-tenant/swagger-resources/**","/foundation-tenant/webjars/**"]
+
+zuul:
+  semaphore:
+    max-semaphores: 200
+  host:
+    # 最大连接数
+    max-total-connections: 200
+    # 每个router最大连接数
+    max-per-route-connections: 20
+    # 连接超时时间
+    connect-timeout-millis: 3000
+    # 响应超时时间
+    socket-timeout-millis: 15000
+  ignoredPatterns: /*/management-admin/**,/management-admin/**
+
+hystrix:
+  threadpool:
+    default:
+      core-Size: 200
+      max-queue-size: 20
+  command:
+    default:
+      execution:
+        isolation:
+          semaphore:
+            maxConcurrentRequests: 1000 # 允许最大请求数
+          thread:
+            # 请按实际情况设置配置
+            timeout-in-milliseconds: 15000
+          strategy: THREAD
+spring:
+  cloud:
+    loadbalancer:
+      retry:
+        enabled: true
+
+ribbon:
+  # 对所有操作请求都进行重试
+  ok-to-retry-on-all-operations: true
+  # 切换实例的重试次数
+  max-auto-retries-next-server: 2
+  # 对当前实例的重试次数
+  max-auto-retries: 1
+  max-connections-per-host: 200
+  max-total-connections: 200
+  connect-timeout: 3000
+  # 请按实际情况配置
+  read-timeout: 12000
+
+  ==未测试==
