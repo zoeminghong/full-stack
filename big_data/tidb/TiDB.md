@@ -54,7 +54,9 @@ TiDB 2.1 及更早版本使用的 GC 方式是由 GC leader 向所有 Region 发
 
 [GC 配置](https://pingcap.com/docs-cn/v3.0/reference/garbage-collection/configuration/)
 
+### TiFlash
 
+https://www.chainnews.com/articles/268894218963.htm
 
 ## 问题点
 

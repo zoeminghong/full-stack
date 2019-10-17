@@ -1,3 +1,9 @@
+statefulset
+
+Daemonset
+
+http://docs.kubernetes.org.cn
+
 # Kubernetes
 
 Namespace 做隔离，Cgroups 做限制，rootfs 做文件系统
@@ -11,6 +17,8 @@ Namespace 做隔离，Cgroups 做限制，rootfs 做文件系统
 Kubernetes 就是操作系统!
 
 ![image-20190827200529154](assets/image-20190827200529154.png)
+
+![image-20190909220505466](assets/image-20190909220505466.png)
 
 控制节点，即 Master 节点，由三个紧密协作的独立组件组合而成，它们分别是负责 API 服 务的 kube-apiserver、负责调度的 kube-scheduler，以及负责容器编排的 kube-controller- manager。整个集群的持久化数据，则由 kube-apiserver 处理后保存在 Ectd 中。 
 
@@ -382,7 +390,568 @@ metadata:
 
 > kubectl get -o yaml 这样的参数，会将指定的 Pod API 对象以 YAML 的方式展示出来。
 
+Downward API
 
+让 Pod 里的容器能够直接获取到这个 Pod API 对象本身的信息。
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: test-downwardapi-volume
+ labels:
+ zone: us-est-coast
+ cluster: test-cluster1
+ rack: rack-22
+spec:
+ containers:
+ - name: client-container
+ image: k8s.gcr.io/busybox
+ command: ["sh", "-c"]
+ args:
+ - while true; do
+          if [[ -e /etc/podinfo/labels ]]; then
+            echo -en '\n\n'; cat /etc/podinfo/labels; fi;
+          sleep 5;
+        done;
+ volumeMounts:
+ - name: podinfo
+ mountPath: /etc/podinfo
+ readOnly: false
+ volumes:
+ - name: podinfo
+ projected:
+ sources:
+ - downwardAPI:
+ items:
+ - path: "labels"
+fieldRef:
+fieldPath: metadata.labels
+```
+
+在这个 Pod 的 YAML 文件中，我定义了一个简单的容器，声明了一个 projected 类型的 Volume。只不过这次 Volume 的数据来源，变成了 Downward API。而这个 Downward API Volume，则声明了要暴露 Pod 的 metadata.labels 信息给容器。 
+
+通过这样的声明方式，当前 Pod 的 Labels 字段的值，就会被 Kubernetes 自动挂载成为容器里的 /etc/podinfo/labels 文件。 
+
+可以通过 kubectl logs 指令，查看到这些 Labels 字段被打印出来。
+
+Downward API 支持的字段
+
+```yaml
+1. 使用 fieldRef 可以声明使用:
+spec.nodeName - 宿主机名字
+status.hostIP - 宿主机 IP
+metadata.name - Pod 的名字
+metadata.namespace - Pod 的 Namespace
+status.podIP - Pod 的 IP
+spec.serviceAccountName - Pod 的 Service Account 的名字 metadata.uid - Pod 的 UID
+metadata.labels['<KEY>'] - 指定 <KEY> 的 Label 值 metadata.annotations['<KEY>'] - 指定 <KEY> 的 Annotation 值 metadata.labels - Pod 的所有 Label
+metadata.annotations - Pod 的所有 Annotation
+2. 使用 resourceFieldRef 可以声明使用: 
+容器的 CPU limit
+容器的 CPU request 
+容器的 memory limit
+容器的 memory request
+```
+
+需要注意的是，Downward API 能够获取到的信息，一定是 Pod 里的容器进程启动之前就能够确定下来的信息。而如果你想要获取 Pod 容器运行后才会出现的信息，比如，容器进程的 PID，那就肯定不能使用 Downward API 了，而应该考虑在 Pod 里定义一个 sidecar 容器。
+
+其实，Secret、ConfigMap，以及 Downward API 这三种 Projected Volume 定义的信息，大多还可以通过环境变量的方式出现在容器里。但是，通过环境变量获取这些信息的方式，不具备自动更新的能力。所以，一般情况下，我都建议你使用 Volume 文件的方式获取这些信息。
+
+Service Account
+
+相信你一定有过这样的想法:我现在有了一个 Pod，我能不能在这个 Pod 里安装一个 Kubernetes 
+
+的 Client，这样就可以从容器里直接访问并且操作这个 Kubernetes 的 API 了呢? 这当然是可以的。
+ 不过，你首先要解决 API Server 的授权问题。 
+
+Service Account 对象的作用，就是 Kubernetes 系统内置的一种“服务账户”，它是 Kubernetes 进行权限分配的对象。比如，Service Account A，可以只被允许对 Kubernetes API 进行 GET 操 作，而 Service Account B，则可以有 Kubernetes API 的所有操作的权限。 
+
+像这样的 Service Account 的授权信息和文件，实际上保存在它所绑定的一个特殊的 Secret 对象里 的。这个特殊的 Secret 对象，就叫作ServiceAccountToken。任何运行在 Kubernetes 集群上的 应用，都必须使用这个 ServiceAccountToken 里保存的授权信息，也就是 Token，才可以合法地 访问 API Server。 
+
+所以说，Kubernetes 项目的 Projected Volume 其实只有三种，因为第四种 ServiceAccountToken，只是一种特殊的 Secret 而已。 
+
+另外，为了方便使用，Kubernetes 已经为你提供了一个的默认“服务账户”(default Service Account)。并且，任何一个运行在 Kubernetes 里的 Pod，都可以直接使用这个默认的 Service Account，而无需显示地声明挂载它。 
+
+这是如何做到的呢?
+
+当然还是靠 Projected Volume 机制。 
+
+如果你查看一下任意一个运行在 Kubernetes 集群里的 Pod，就会发现，每一个 Pod，都已经自动 声明一个类型是 Secret、名为 default-token-xxxx 的 Volume，然后 自动挂载在每个容器的一个 固定目录上。比如: 
+
+```
+$ kubectl describe pod nginx-deployment-5c678cfb6d-lg9lw
+Containers:
+... Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-s8rbq (ro)
+Volumes:
+    default-token-s8rbq:
+    Type:       Secret (a volume populated by a Secret)
+    SecretName:  default-token-s8rbq
+    Optional:    false
+```
+
+这个 Secret 类型的 Volume，正是默认 Service Account 对应的 ServiceAccountToken。所以 说，Kubernetes 其实在每个 Pod 创建的时候，自动在它的 spec.volumes 部分添加上了默认 ServiceAccountToken 的定义，然后自动给每个容器加上了对应的 volumeMounts 字段。这个过 程对于用户来说是完全透明的。 
+
+这样，一旦 Pod 创建完成，容器里的应用就可以直接从这个默认 ServiceAccountToken 的挂载目 录里访问到授权信息和文件。这个容器内的路径在 Kubernetes 里是固定的， 即:/var/run/secrets/kubernetes.io/serviceaccount ，而这个 Secret 类型的 Volume 里面的内 容如下所示: 
+
+```
+$ ls /var/run/secrets/kubernetes.io/serviceaccount
+ca.crt namespace  token
+```
+
+所以，你的应用程序只要直接加载这些授权文件，就可以访问并操作 Kubernetes API 了。而且，如果你使用的是 Kubernetes 官方的 Client 包(k8s.io/client-go)的话，它还可以自动加载这个目录下的文件，你不需要做任何配置或者编码操作。
+
+这种把 Kubernetes 客户端以容器的方式运行在集群里，然后使用 default Service Account 自动 授权的方式，被称作“InClusterConfig”，也是我最推荐的进行 Kubernetes API 编程的授权方 式。 
+
+当然，考虑到自动挂载默认 ServiceAccountToken 的潜在风险，Kubernetes 允许你设置默认不为 Pod 里的容器自动挂载这个 Volume。 
+
+除了这个默认的 Service Account 外，我们很多时候还需要创建一些我们自己定义的 Service Account，来对应不同的权限设置。这样，我们的 Pod 里的容器就可以通过挂载这些 Service Account 对应的 ServiceAccountToken，来使用这些自定义的授权信息。在后面讲解为 Kubernetes 开发插件的时候，我们将会实践到这个操作。 
+
+#### 容器健康检查和恢复机制
+
+在 Kubernetes 中，你可以为 Pod 里的容器定义一个健康检查“探针”(Probe)。这样，kubelet 就会根据这个 Probe 的返回值决定这个容器的状态，而不是直接以容器进行是否运行(来自 Docker 返回的信息)作为依据。这种机制，是生产环境中保证应用健康存活的重要手段。
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ labels:
+ test: liveness
+ name: test-liveness-exec
+spec:
+ containers:
+  - name: liveness
+ image: busybox
+ args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+ livenessProbe:
+ exec:
+ command:
+        - cat
+        - /tmp/healthy
+ initialDelaySeconds: 5
+ periodSeconds: 5
+```
+
+在这个 Pod 中，我们定义了一个有趣的容器。它在启动之后做的第一件事，就是在 /tmp 目录下创 建了一个 healthy 文件，以此作为自己已经正常运行的标志。而 30 s 过后，它会把这个文件删除 掉。 
+
+与此同时，我们定义了一个这样的 livenessProbe(健康检查)。它的类型是 exec，这意味着，它 会在容器启动后，在容器里面执行一句我们指定的命令，比如:“cat /tmp/healthy”。这时，如 果这个文件存在，这条命令的返回值就是 0，Pod 就会认为这个容器不仅已经启动，而且是健康 的。这个健康检查，在容器启动 5 s 后开始执行(initialDelaySeconds: 5)，每 5 s 执行一次 (periodSeconds: 5)。 如果  /tmp 下文件不存在说明 pod 已经不健康了。
+
+Kubernetes 里的Pod 恢复机制，也叫 restartPolicy。它是 Pod 的 Spec 部分的一个标准字段(pod.spec.restartPolicy)，默认值是 Always，即:任何时候这个容器发生了异常，它一定会被重新创建。
+
+但一定要强调的是，Pod 的恢复过程，永远都是发生在当前节点上，而不会跑到别的节点上去。事实上，一旦一个 Pod 与一个节点(Node)绑定，除非这个绑定发生了变化(pod.spec.node 字段被修改)，否则它永远都不会离开这个节点。这也就意味着，如果这个宿主机宕机了，这个 Pod 也不会主动迁移到其他节点上去。
+
+而如果你想让 Pod 出现在其他的可用节点上，就必须使用 Deployment 这样的“控制器”来管理 Pod，哪怕你只需要一个 Pod 副本。即一个单 Pod 的 Deployment 与一个 Pod 最主要的区别。 
+
+而作为用户，你还可以通过设置 restartPolicy，改变 Pod 的恢复策略。除了 Always，它还有 OnFailure 和 Never 两种情况: 
+
+- Always:在任何情况下，只要容器不在运行状态，就自动重启容器; 
+
+- OnFailure: 只在容器 异常时才自动重启容器;
+
+- Never: 从来不重启容器 
+
+值得一提的是，Kubernetes 的官方文档，把 restartPolicy 和 Pod 里容器的状态，以及 Pod 状态 的对应关系，总结了非常复杂的一大堆情况。实际上，你根本不需要死记硬背这些对应关系，只要 记住如下两个基本的设计原理即可: 
+
+1. 只要 Pod 的 restartPolicy 指定的策略允许重启异常的容器(比如:Always)，那么这个 Pod 就会保持 Running 状态，并进行容器重启。否则，Pod 就会进入 Failed 状态 。 
+2. 对于包含多个容器的 Pod，只有它里面所有的容器都进入异常状态后，Pod 才会进入 Failed 状 态。在此之前，Pod 都是 Running 状态。此时，Pod 的 READY 字段会显示正常容器的个数， 比如: 
+
+```
+$ kubectl get pod test-liveness-exec
+NAME           READY     STATUS    RESTARTS   AGE
+liveness-exec   0/1       Running   1          1m
+```
+
+所以，假如一个 Pod 里只有一个容器，然后这个容器异常退出了。那么，只有当 restartPolicy=Never 时，这个 Pod 才会进入 Failed 状态。而其他情况下，由于 Kubernetes 都可 以重启这个容器，所以 Pod 的状态保持 Running 不变。 
+
+而如果这个 Pod 有多个容器，仅有一个容器异常退出，它就始终保持 Running 状态，哪怕即使 restartPolicy=Never。只有当所有容器也异常退出之后，这个 Pod 才会进入 Failed 状态。 
+
+preset.yaml
+
+开发人员只需要提交一个基本的、非常简单的 Pod YAML，Kubernetes 自动给对应的 Pod 对象加上其他必要的信息。
+
+运维人员就可以定义一个 PodPreset 对象。在这个对象中，凡是他想在开发人员编写的 Pod 里追加的字段，都可以预先定义好。比如这个 preset.yaml:
+
+```
+apiVersion: settings.k8s.io/v1alpha1
+kind: PodPreset
+metadata:
+  name: allow-database
+spec:
+  selector:
+    matchLabels:
+      role: frontend
+  env:
+    - name: DB_PORT
+      value: "6379"
+  volumeMounts:
+    - mountPath: /cache
+      name: cache-volume
+  volumes:
+    - name: cache-volume
+      emptyDir: {}
+```
+
+在这个 PodPreset 的定义中，首先是一个 selector。这就意味着后面这些追加的定义，只会作用于 selector 所定义的、带有“role: frontend”标签的 Pod 对象，这就可以防止“误伤”。 
+
+然后，我们定义了一组 Pod 的 Spec 里的标准字段，以及对应的值。比如，env 里定义了 DB_PORT 这个环境变量，volumeMounts 定义了容器 Volume 的挂载目录，volumes 定义了一 个 emptyDir 的 Volume。 
+
+接下来，我们假定运维人员先创建了这个 PodPreset，然后开发人员才创建 Pod:
+
+```
+$ kubectl create -f preset.yaml
+$ kubectl create -f pod.yaml
+```
+
+```yaml
+$ kubectl get pod website -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+ name: website
+ labels:
+ app: website
+ role: frontend
+ annotations:
+    podpreset.admission.kubernetes.io/podpreset-allow-database: "resource version"
+spec:
+ containers:
+ - name: website
+ image: nginx
+ volumeMounts:
+ - mountPath: /cache
+ name: cache-volume
+ ports:
+ - containerPort: 80
+ env:
+ - name: DB_PORT
+ value: "6379"
+ volumes:
+ - name: cache-volume
+ emptyDir: {}
+```
+
+### Controller
+
+用于控制 Pod 的对象。控制器对象本身，负责定义被管理对象的期望状态。
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+```
+
+如果在这个集群中，携带 app=nginx 标签的 Pod 的个数大于 2 的时候，就会有旧的 Pod 被删除;反之，就会有新的 Pod 被创建。Deployment 就是控制器的一种。这些控制器之所以被统一放在 pkg/controller 目录下，就是因为它们都遵循 Kubernetes
+项目中的一个通用编排模式，即:控制循环(control loop)或者叫调谐循环（Reconcile Loop）。
+
+查看控制器列表
+
+```
+cd kubernetes/pkg/controller/
+$ ls -d */
+```
+
+以 Deployment 为例，我和你简单描述一下它对控制器模型的实现:
+
+1. Deployment 控制器从 Etcd 中获取到所有携带了“app: nginx”标签的 Pod，然后统计它们 的数量，这就是实际状态; 
+2. Deployment 对象的 Replicas 字段的值就是期望状态; 
+3. Deployment 控制器将两个状态做比较，然后根据比较结果，确定是创建 Pod，还是删除已有 的 Pod(具体如何操作 Pod 对象，我会在下一篇文章详细介绍)。 
+
+一个 Kubernetes 对象的主要编排逻辑，实际上是在第三步的“对比”阶段完成的。
+
+这个操作，通常被叫作调谐(Reconcile)。这个调谐的过程，则被称作“Reconcile Loop”(调谐循环)或者“Sync Loop”(同步循环)。
+
+在这里存在被控制者和控制者两方，而被控制对象的定义，则来自于一个“模板”。比如，Deployment 里的 template 字段。所有被这个 Deployment 管理的 Pod 实例，其实都是根据这个 template 字段的内容创建出来的。
+
+像 Deployment 定义的 template 字段，在 Kubernetes 项目中有一个专有的名字，叫作 PodTemplate(Pod 模板)。
+
+被控制性对象信息就被存在 Ectd 中。
+
+![image-20190901112036543](assets/image-20190901112036543.png)
+
+这就是为什么，在所有 API 对象的 Metadata 里，都有一个字段叫作 ownerReference，用于保存当前这个 API 对象的拥有者(Owner)的信息。对于一个 Deployment 所管理的 Pod，它的 ownerReference 是 ReplicaSet。
+
+#### 滚动更新
+
+K8S 通过 Deployment 实现了 pod 滚动更新。Deployment 控制器实际操纵的是 ReplicaSet 对象，而不是 Pod 对象。
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3  # 副本个数是3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+```
+
+ ![image-20190902152206887](assets/image-20190902152206887.png)
+
+ReplicaSet 负责通过“控制器模式”，保证系统中 Pod 的个数永远等于指定的个数(比如，3 个)。这也正是 Deployment 只允许容器的 restartPolicy=Always 的主要原因:只有在容器能保证自己始终是 Running 状态的前提下，ReplicaSet 调整 Pod 的个数才有意义。
+
+“水平扩展 / 收缩”非常容易实现，Deployment Controller 只需要修改它所控制的ReplicaSet 的 Pod 副本个数就可以了。
+
+```
+kubectl scale deployment nginx-deployment --replicas=4
+```
+
+滚动更新
+
+```shell
+# --record 参数。它的作用，是记录下你每次操作所执行的命令
+kubectl create -f nginx-deployment.yaml --record
+```
+
+查看创建后的状态
+
+```shell
+kubectl get deployments
+```
+
+在返回结果中，我们可以看到四个状态字段，它们的含义如下所示。
+
+1. DESIRED:用户期望的 Pod 副本个数(spec.replicas 的值); 
+2. CURRENT:当前处于 Running 状态的 Pod 的个数; 
+3. UP-TO-DATE:当前处于最新版本的 Pod 的个数，所谓最新版本指的是 Pod 的 Spec 部分 与 Deployment 里 Pod 模板里定义的完全一致; 
+4. AVAILABLE:当前已经可用的 Pod 的个数，即:既是 Running 状态，又是最新版本，并 且已经处于 Ready(健康检查正确)状态的 Pod 的个数。 
+
+可以看到，只有这个 AVAILABLE 字段，描述的才是用户所期望的最终状态。 
+
+而 Kubernetes 项目还为我们提供了一条指令，让我们可以实时查看 Deployment 对象的状态变化。
+
+```shell
+kubectl rollout status deployment/nginx-deployment
+NAME               DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3         3         3            3           20s
+```
+
+查看一下这个 Deployment 所控制的 ReplicaSet
+
+```shell
+kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-3167673210   3         3         3       20s
+```
+
+ ReplicaSet 的名字，则是由 Deployment 的名字和一个随机字符串共同组成。这个随机字符串叫作 pod-template-hash，在我们这个例子里就是:3167673210。而 ReplicaSet 的 DESIRED、CURRENT 和 READY 字段的含义，和 Deployment 中是一致
+的。
+
+当你修改了 Deployment 里的 Pod 定义之后，Deployment Controller 会 使用这个修改后的 Pod 模板，创建一个新的 ReplicaSet(hash=1764197365)，这个新的 ReplicaSet 的初始 Pod 副本数是:0。 
+
+如此交替进行，新 ReplicaSet 管理的 Pod 副本数，从 0 个变成 1 个，再变成 2 个，最后变成 3 个。而旧的 ReplicaSet 管理的 Pod 副本数则从 3 个变成 2 个，再变成 1 个，最后变成 0 个。这样，就完成了这一组 Pod 的版本升级过程。
+
+然后，在 Age=24 s 的位置，Deployment Controller 开始将这个新的 ReplicaSet 所控制的 Pod 副本数从 0 个变成 1 个，即:“水平扩展”出一个副本。 
+
+在这个“滚动更新”过程完成之后，你可以查看一下新、旧两个 ReplicaSet 的最终状态:
+
+```shell
+$ kubectl get rs
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-1764197365   3         3         3       6s
+nginx-deployment-3167673210   0         0         0       30s
+```
+
+修改 Deployment 方法：
+
+- kubectl edit 指令编辑 Etcd 里的 API 对象。kubectl edit 指令编辑完成后，保存退出，Kubernetes 就会立刻触发“滚动更新”的过程
+- kubectl set image
+
+```shell
+kubectl set image deployment/nginx-deployment nginx=nginx:1.91
+```
+
+而为了进一步保证服务的连续性，Deployment Controller 还会确保，在任何时间窗口内，只 有指定比例的 Pod 处于离线状态。同时，它也会确保，在任何时间窗口内，只有指定比例的新 Pod 被创建出来。这两个比例的值都是可以配置的，默认都是 DESIRED 值的 25%。 
+
+所以，在上面这个 Deployment 的例子中，它有 3 个 Pod 副本，那么控制器在“滚动更 新”的过程中永远都会确保至少有 2 个 Pod 处于可用状态，至多只有 4 个 Pod 同时存在于集 群中。这个策略，是 Deployment 对象的一个字段，名叫 RollingUpdateStrategy，如下所 示: 
+
+```
+spec:
+...
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+```
+
+在上面这个 RollingUpdateStrategy 的配置中，maxSurge 指定的是除了 DESIRED 数量之 外，在一次“滚动”中，Deployment 控制器还可以创建多少个新 Pod;而 maxUnavailable 指的是，在一次“滚动”中，Deployment 控制器可以删除多少个旧 Pod。 
+
+同时，这两个配置还可以用前面我们介绍的百分比形式来表示，比如: maxUnavailable=50%，指的是我们最多可以一次删除“50%*DESIRED 数量”个 Pod。 
+
+![image-20190902154242017](assets/image-20190902154242017.png)
+
+回滚
+
+我们只需要执行一条 kubectl rollout undo 命令，就能把整个 Deployment 回滚到上一个版本:
+
+```shell
+kubectl rollout undo deployment/nginx-deployment
+```
+
+原先 ReplicaSet 将再次 “扩展” 成 3个 Pod，而让新的 ReplicaSet 重新“收缩”到 0 个 Pod。
+
+如果我们需要指定版本回退呢？
+
+我需要使用 kubectl rollout history 命令，查看每次 Deployment 变更对应的版本。而由于我们在创建这个 Deployment 的时候，指定了–record 参数，所以我们创建这些版本时执行的 kubectl 命令，都会被记录下来。
+
+```shell
+kubectl rollout history deployment/nginx-deployment
+deployments "nginx-deployment"
+REVISION    CHANGE-CAUSE
+1           kubectl create -f nginx-deployment.yaml --record
+2           kubectl edit deployment/nginx-deployment
+3           kubectl set image deployment/nginx-deployment nginx=nginx:1.91
+```
+
+你还可以通过这个 kubectl rollout history 指令，看到每个版本对应的 Deployment 的 API 对象的细节。
+
+```shell
+kubectl rollout history deployment/nginx-deployment --revision=2
+```
+
+然后，我们就可以在 kubectl rollout undo 命令行最后，加上要回滚到的指定版本的版本号，就可以回滚到指定版本了。这个指令的用法如下:
+
+```shell
+kubectl rollout undo deployment/nginx-deployment --to-revision=2
+```
+
+每次滚动升级的时候都会创建一个新的 ReplicaSet 对象，避免资源的浪费，能否沿用当前的呢？
+
+1. Deployment 进入了一个“暂停”状态
+2. 对 Deployment 修改
+3. Deployment “恢复”回来
+
+```shell
+# pause deployment
+kubectl rollout pause deployment/nginx-deployment
+# resume deployment
+kubectl rollout resume deployment/nginx-deployment
+```
+
+那么，我们又该如何控制这些“历史”ReplicaSet 的数量呢? 
+
+很简单，Deployment 对象有一个字段，叫作 spec.revisionHistoryLimit，就是 Kubernetes 为 Deployment 保留的“历史版本”个数。所以，如果把它设置为 0，你就再也不能做回滚操 作了。 
+
+#### DaemonSet
+
+DaemonSet 其实是一个非常简单的控制器。在它 的控制循环中，只需要遍历所有节点，然后根据节点上是否有被管理 Pod 的情况，来决定是否 要创建或者删除一个 Pod。 
+
+只不过，在创建每个 Pod 的时候，DaemonSet 会自动给这个 Pod 加上一个 nodeAffinity，从 而保证这个 Pod 只会在指定节点上启动。同时，它还会自动给这个 Pod 加上一个 Toleration，从而忽略节点的 unschedulable“污点”。 
+
+当然，你也可以在 Pod 模板里加上更多种类的 Toleration，从而利用 DaemonSet 实现自己的目的。
+
+```shell
+1 tolerations:
+2 - key: node-role.kubernetes.io/master 
+3 effect: NoSchedule
+```
+
+### Job
+
+用来描述离线业务的 API 对象。
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: pi
+        image: resouer/ubuntu-bc
+        command: ["sh", "-c", "echo 'scale=10000; 4*a(1)' | bc -l "]
+      restartPolicy: Never
+  backoffLimit: 4
+```
+
+这个 Job 对象在创建后，它的 Pod 模板，被自动加上了一个 controller-uid=< 一 个随机字符串 > 这样的 Label。而这个 Job 对象本身，则被自动加上了这个 Label 对应的 Selector，从而 保证了 Job 与它所管理的 Pod 之间的匹配关系。
+
+restartPolicy 在 Job 对象里只允许被设置为 Never 和 OnFailure。离线计算的 Pod 永远都不应 该被重启，否则它们会再重新计算一遍。那么离线作业失败后 Job Controller 就会不断地尝试创建一个新 Pod，会不断地有新 Pod 被创建出来。这个尝试肯定不能无限进行下去。所以，我们就在 Job 对象的 spec.backoffLimit 字段 里定义了重试次数为 4(即，backoffLimit=4)，而这个字段的默认值是 6。
+
+当一个 Job 的 Pod 运行结束后，它会进入 Completed 状态。但是，如果这个 Pod 因为某种原因一直不肯结束呢? spec.activeDeadlineSeconds 字段可以设置最长运行时间。
+
+在 Job 对象中，负责并行控制的参数有两个:
+
+1. spec.parallelism，它定义的是一个 Job 在任意时间最多可以启动多少个 Pod 同时运行;
+
+2. spec.completions，它定义的是 Job 至少要完成的 Pod 数目，即 Job 的最小完成数。
+
+### CronJob
+
+定时任务。
+
+```yaml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster
+           restartPolicy: OnFailure
+```
+
+CronJob 是一个 Job 对象的控制器(Controller)。没错，CronJob 与 Job 的关系，正如同 Deployment 与 Pod 的关系一样。CronJob 是一个专 门用来管理 Job 对象的控制器。只不过，它创建和删除 Job 的依据，是 schedule 字段定义 的、一个标准的Unix Cron格式的表达式。
+
+```shell
+kubectl create -f ./cronjob.yaml
+kubectl get jobs
+```
+
+需要注意的是，由于定时任务的特殊性，很可能某个 Job 还没有执行完，另外一个新 Job 就产 生了。这时候，你可以通过 spec.concurrencyPolicy 字段来定义具体的处理策略。比如:
+
+1. concurrencyPolicy=Allow，这也是默认情况，这意味着这些 Job 可以同时存在;
+2. concurrencyPolicy=Forbid，这意味着不会创建新的 Pod，该创建周期被跳过;
+3. concurrencyPolicy=Replace，这意味着新产生的 Job 会替换旧的、没有执行完的 Job。
+
+而如果某一次 Job 创建失败，这次创建就会被标记为“miss”。当在指定的时间窗口内，miss 的数目达到 100 时，那么 CronJob 会停止再创建这个 Job。
+
+这个时间窗口，可以由 spec.startingDeadlineSeconds 字段指定。比如 startingDeadlineSeconds=200，意味着在过去 200 s 里，如果 miss 的数目达到了 100 次， 那么这个 Job 就不会被创建执行了。
 
 ### Service
 
@@ -681,5 +1250,24 @@ Kubernetes 集群中删除这个 Nginx Deployment 的话
 
 ```shell
 kubectl delete -f nginx-deployment.yaml
+```
+
+## 声明式API
+
+什么才是“声明式 API”呢？
+
+答案是，kubectl apply 命令。
+
+它跟 kubectl replace 命令有什么本质区别吗?
+
+实际上，你可以简单地理解为，kubectl replace 的执行过程，是使用新的 YAML 文件中的 API 对象，替换原有的 API 对象;而 kubectl apply，则是执行了一个对原有 API 对象的 PATCH 操 作。
+
+更进一步地，这意味着 kube-apiserver 在响应命令式请求(比如，kubectl replace)的时候， 一次只能处理一个写请求，否则会有产生冲突的可能。而对于声明式请求(比如，kubectl apply)，一次能处理多个写操作，并且具备 Merge 能力。
+
+## Minikube
+
+```
+minikube version
+minikube start --wait=false
 ```
 

@@ -37,6 +37,8 @@ du -sh /hadoop/yarn/log/*
 
 ```shell
 grep -E 'pattern condition 1'  fileName |grep 'pattern condition 2'
+
+zgrep -a 'pattern condition 1'  fileName.tar.gz
 ```
 
 同步服务器时间

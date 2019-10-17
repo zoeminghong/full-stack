@@ -566,6 +566,31 @@ git push upstram :[origin_dev]
 git push origin --delete [branch]
 ```
 
+### submodule
+
+子模块
+
+```shell
+# 添加子模块
+git submodule add [url] [path]
+
+# pull 子模块项目初始化
+git submodule update --init --recursive
+
+# 子模块更新
+git submodule foreach git pull
+
+# 删除子模块
+# 1、子模块目录 删除子模块目录及源码
+rm -rf 
+# 2、删除项目目录下.gitmodules文件中子模块相关条目
+vi .gitmodules 
+# 3、删除配置项中子模块相关条目
+vi .git/config 
+# 4、删除模块下的子模块目录，每个子模块对应一个目录，注意只删除对应的子模块目录即可
+rm -rf .git/module/[module]
+```
+
 ## 场景使用
 
 ### 新建代码库

@@ -793,3 +793,289 @@ Analyzer 由三部分组成
 - ICU Analyzer  – 提供了 Unicode 的支持，更好的支持亚洲语言，`elasticsearch-plugin install analysis-icu` 
 - IK – 支持自定义词库，支持热更新分词字典
 - THULAC – 清华大学自然语言处理提供的分词器
+
+## 显式 Mapping 设置
+
+ES 模式是会根据字段的值进行类型的推算，但不是特别的精准，可以通过显式 Mapping 方式进设置。
+
+```shell
+PUT users
+{
+    "mappings" : {
+      "properties" : {
+        "firstName" : {
+          "type" : "text"
+        },
+        "lastName" : {
+          "type" : "text"
+        },
+        "mobile" : {
+          "type" : "text",
+          "index": false,
+          "index_options": "positions"
+        }
+      }
+    }
+}
+```
+
+希望某个字段**不被搜索到的场景下**，可以将 mappings 中字段属性 index 设置为 false，于此同时还可以达到节省空间的效果。
+
+倒排索引级别：
+
+- docs：记录 doc id
+
+- freqs：记录 doc id 和 term frequencies
+
+- positions：记录 doc id / term frequencies / term position
+
+- Offsets:  doc id / term frequencies / term postition / character offset
+
+  Text 默认记录是 positions，其他默认是 docs
+
+  记录越多，占用空间越多
+
+  通过 `index_options: "positions"`  进行配置
+
+## Index Template
+
+帮助你设定 mapping 和 Settings，并按照一定的规则，自动匹配到相应的索引之上。
+
+- 模版仅在一个索引被创建的时候，才会有作用，一个已经存在的索引是不受影响的
+- 可以设置多个模版，这些设置会被 merge 在一起
+- 你可以指定 order 的数值，控制 merging 的过程
+
+## Term
+
+Term 是表达语义最小单位。
+
+特点：
+
+Term Level Query：Term Query / Range Query / Exists Query / Prefix Query / Wildcard Query
+
+在 ES 中 Term 查询是不做分词，会将输入作为一个整体（也就是整条数据作为一个整体），在倒排索引中找到准确的词项，并且使用相关度算分方式为每个包含该词项的文档进行相关度算分
+
+可以通过 Constant Score 将查询转换为 Filtering，避免算分，利用缓存，提高查询效率
+
+```json
+{
+"query":{
+  "term":{
+    "productID":{
+    "value":"x-sDs-ss"
+  }
+  }
+}
+}
+
+{
+"query":{
+  "term":{
+    "productID.keyword":{
+    "value":"x-sDs-ss"
+  }
+  }
+}
+}
+```
+
+Term 是不做分词的，所以查询时候是都是小写类型，反而大写是不能进行精确匹配，如果需要精确匹配，需要使用keyword
+
+```shell
+POST /products/_search
+{
+  "explain": true,
+  "query": {
+    "constant_score": {
+      "filter": {
+        "term": {
+          "productID.keyword": "XHDK-A-1293-#fJ3"
+        }
+      }
+
+    }
+  }
+}
+```
+
+利用 constant score 避免算分
+
+## 全文本查询
+
+基于全文本查询
+
+Match Query / Match Phrase Query / Query String Query
+
+特点
+
+索引和搜索时会进行分词操作，查询字符串先传递到一个合适的分词器，然后生成一个供查询的词列表。
+
+查询时候，先对输入的查询进行分词，然后每个词项逐个进行底层的查询，最终将结果进行合并。并为每个文档生成一个算分。
+
+**比较**
+
+```
+POST products/_search
+{
+  "profile": "true",
+  "explain": true,
+  "query": {
+    "term": {
+      "date": "2019-01-01"
+    }
+  }
+}
+
+POST products/_search
+{
+  "profile": "true",
+  "explain": true,
+  "query": {
+    "match": {
+      "date": "2019-01-01"
+    }
+```
+
+结构化数据的精确匹配，就使用term查询。日期属于结构化数据。match主要用于文本的 full-text 查询
+
+## 结构化搜索
+
+结构化搜索是指对结构化数据的搜索。
+
+日期、数值、布尔值都是算结构化的数据。
+
+文本也可以是结构化的，比如：枚举值。
+
+- 布尔、时间、日期和数字这类结构化数据：有精确的格式，我们可以对这些格式进行逻辑操作。包括比较数字或时间的范围，或判断两个值的大小。
+- 结构化的文本可以做精确匹配或部分匹配
+  - Term 查询 / Prefix 前缀查询
+- 结构化结果只有 “是” 或 “否” 两个值
+  - 根据场景需要，可以决定结构化搜索的打分
+
+```shell
+#结构化搜索，精确匹配
+DELETE products
+POST /products/_bulk
+{ "index": { "_id": 1 }}
+{ "price" : 10,"avaliable":true,"date":"2018-01-01", "productID" : "XHDK-A-1293-#fJ3" }
+{ "index": { "_id": 2 }}
+{ "price" : 20,"avaliable":true,"date":"2019-01-01", "productID" : "KDKE-B-9947-#kL5" }
+{ "index": { "_id": 3 }}
+{ "price" : 30,"avaliable":true, "productID" : "JODL-X-1937-#pV7" }
+{ "index": { "_id": 4 }}
+{ "price" : 30,"avaliable":false, "productID" : "QQPX-R-3956-#aD8" }
+
+GET products/_mapping
+
+
+
+#对布尔值 match 查询，有算分
+POST products/_search
+{
+  "profile": "true",
+  "explain": true,
+  "query": {
+    "term": {
+      "avaliable": true
+    }
+  }
+}
+
+
+#对布尔值，通过constant score 转成 filtering，没有算分
+POST products/_search
+{
+  "profile": "true",
+  "explain": true,
+  "query": {
+    "constant_score": {
+      "filter": {
+        "term": {
+          "avaliable": true
+        }
+      }
+    }
+  }
+}
+
+#数字 Range 查询
+GET products/_search
+{
+    "query" : {
+        "constant_score" : {
+            "filter" : {
+                "range" : {
+                    "price" : {
+                        "gte" : 20,
+                        "lte"  : 30
+                    }
+                }
+            }
+        }
+    }
+}
+
+# 日期 range
+POST products/_search
+{
+    "query" : {
+        "constant_score" : {
+            "filter" : {
+                "range" : {
+                    "date" : {
+                      "gte" : "now-1y"  # 现在-1年
+                    }
+                }
+            }
+        }
+    }
+}
+
+#exists查询
+POST products/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "exists": {
+          "field": "date"
+        }
+      }
+    }
+  }
+}
+
+```
+
+日期格式
+
+<img src="assets/image-20191010235742648.png" alt="image-20191010235742648" style="zoom:25%;" />
+
+### 多值查询
+
+```shell
+#处理多值字段
+POST /movies/_bulk
+{ "index": { "_id": 1 }}
+{ "title" : "Father of the Bridge Part II","year":1995, "genre":"Comedy"}
+{ "index": { "_id": 2 }}
+{ "title" : "Dave","year":1993,"genre":["Comedy","Romance"] }
+
+
+#处理多值字段，term 查询是包含，而不是等于
+POST movies/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "term": {
+          "genre.keyword": "Comedy"
+        }
+      }
+    }
+  }
+}
+```
+
+ES 多值查询采用的是包含，而不是相等，上方例子中会返回两条数据。
+

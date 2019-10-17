@@ -44,6 +44,8 @@ get <'tb'>, <'rk'>, ['cf', 'cf']
 ```shell
 # 可以指定一些修饰词：TIMERANGE, FILTER, LIMIT, STARTROW, STOPROW, TIMESTAMP, MAXLENGTH,or COLUMNS
 scan '<tb>'
+# 根据 rowkey 模糊查询
+scan 'RECOMMENDER:statistics_summary',{FILTER=>"PrefixFilter('day_gyl_allchannel_showClickRate_2019-09')"}
 ```
 
 删除数据

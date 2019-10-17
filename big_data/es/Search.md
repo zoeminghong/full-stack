@@ -33,7 +33,8 @@ GET /movies/_search?q=2012&df=title
 
 - q 指定查询语句
 - df 默认字段，不指定时，会对所有字段进行查询，用于限定查询
-- Sort 排序 / from 和 size 用于分页
+- Sort 排序 
+- from 和 size 用于分页
 - Profile 可以查看查询是如何被执行的
 
 Query String Syntax
@@ -252,3 +253,58 @@ POST movies/_search
 }
 ```
 
+## ES 相关性
+
+ES 5.0 之前相关性算分采用 TF-IDF，5.0之后采用 BM25。
+
+<img src="assets/image-20191011222500753.png" alt="image-20191011222500753" style="zoom:30%;" />
+
+<img src="assets/image-20191011222556061.png" alt="image-20191011222556061" style="zoom:30%;" />
+
+```shell
+POST /testscore/_search
+{
+  //"explain": true,
+  "query": {
+    "match": {
+      "content":"you"
+      //"content": "elasticsearch"
+      //"content":"the"
+      //"content": "the elasticsearch"
+    }
+  }
+}
+```
+
+开启 `explain=true` 可以知道是怎么打分的，默认相关度高的数据在搜索结果中排在前面。
+
+```shell
+POST testscore/_search
+{
+    "query": {
+        "boosting" : {
+            "positive" : {
+                "term" : {
+                    "content" : "elasticsearch"
+                }
+            },
+            "negative" : {
+                 "term" : {
+                     "content" : "like"
+                }
+            },
+            "negative_boost" : 0.2
+        }
+    }
+}
+```
+
+Boost 是控制相关度的一种手段
+
+- 索引，字段或查询子条件
+
+参数 Boost 的含义
+
+- 大于 1 ，打分相关度相对性提升
+- 大于 0 小于 1，打分权重相关性降低
+- 小于 0 ，贡献负分 
