@@ -1,3 +1,5 @@
+https://blog.csdn.net/guohecang/article/details/51736572
+
 # Spark Structured Streaming和 Spark Streaming
 
 ## Spark Streaming

@@ -12,7 +12,7 @@ Apache [HBase](https://www.iteblog.com/archives/tag/hbase/) 是构建在 HDFS �
 
 最终的表数据其实是由 RegionServer 管理的。由于 HBase 表的数据往往很大，这些数据进一步分成许多的 Regions，每个 RegionServer 管理一个或多个 Region。需要注意的是，因为表的数据只有 RegionServer 管理的，所以 master 节点挂掉并不会导致我们数据的丢失。
 
-从整理上看，HBase 的数据就像是一个巨大的有序 map，所有的数据都是按照 RowKey 进行字典排序的，这些排序好的数据被进一步划分成分片或 Region。在默认情况下，当客户端发出插入或更新操作，这些请求被立即发送到对应的 RegionServer。但是为了提高吞吐量，一般我们会将数据缓存（通过关闭 autoflush 选项）在客户端，然后再以批处理的形式提交到 HBase。当 autoflush 被关闭，我们可以通过调用 flush 来提交更新请求，或者通过 **`hbase.client.write.buffer` 参数配置缓存的大小**，当缓存满了也会触发程序提交更新请求。
+从整体上看，HBase 的数据就像是一个巨大的有序 map，所有的数据都是按照 RowKey 进行字典排序的，这些排序好的数据被进一步划分成分片或 Region。在默认情况下，当客户端发出插入或更新操作，这些请求被立即发送到对应的 RegionServer。但是为了提高吞吐量，一般我们会将数据缓存（通过关闭 autoflush 选项）在客户端，然后再以批处理的形式提交到 HBase。当 autoflush 被关闭，我们可以通过调用 flush 来提交更新请求，或者通过 **`hbase.client.write.buffer` 参数配置缓存的大小**，当缓存满了也会触发程序提交更新请求。
 
 前面我们说到 HBase 整张表的数据都是有序的，所以我们可以通过 RowKey 来定位到对应的 RegionServer。当客户端对某个 RowKey 进行更新时，其会到 **Zookeeper 里面找到 HBase 的 meta 信息表存储的 RegionServer**。然后到这个 RegionServer 里面查找对应表的某个 RowKey 是由哪个 RegionServer 管理的。最后到这个 RegionServer 里面更新数据。细心的同学可能就发现，如果每次都经过这几步操作的话，那么会大大影响我们写数据的效率；而且这也会大大增加 Zookeeper 的负载。**所以 HBase 客户端会缓存这些元数据**，只有在元数据失效或无元数据的时候才会按照上面的流程定位到对应的 RegionServer。
 
@@ -26,13 +26,13 @@ Apache [HBase](https://www.iteblog.com/archives/tag/hbase/) 是构建在 HDFS �
 
 在默认情况下，WAL 功能是启用的，在将 WAL 文件写入到磁盘的过程中是需要消耗一些资源的。如果数据丢失对应用程序来说不重要，那么我们是可以关掉 WAL 功能的。
 
-WAL 文件里面的数据组织形式和 HFile 里面的是完全不一样的。WAL 文件里面包含一系列的修改，每条修改代表单个 put 或 delete。这些编辑数据包含当前修改是对应哪个 Region 的。编辑数据是按照时间编写的，因此所有的修改都是以追加的形式写到 WAL 文件的末尾。由于 WAL 里面的数据是按照修改时间编写的，所以写 WAL 文件不会发生随机写，这样可以大大提高写 WAL 的操作。
+WAL 文件里面的数据组织形式和 HFile 里面的是完全不一样的。WAL 文件里面包含一系列的修改，每条修改代表单个 put 或 delete。这些编辑数据包含当前修改是对应哪个 Region 的。**编辑数据是按照时间编写的**，因此所有的修改都是以**追加**的形式写到 WAL 文件的末尾。由于 WAL 里面的数据是按照修改时间编写的，所以写 WAL 文件不会发生随机写，这样可以大大提高写 WAL 的操作。
 
 当 WAL 文件越来越大，这个文件最终是会被关闭的，然后再创建一个新的 active WAL 文件用于存储后面的更新。这个操作称为 rolling WAL 文件。一旦 WAL 文件发生了 Rolled，这个文件就不会再发生修改。
 
 默认情况下，WAL 文件的大小达到了 HDFS 块大小的 50%（HBase 2.0.0 之前是 95%，详见 [HBASE-19148](https://www.iteblog.com/redirect.php?url=aHR0cHM6Ly9pc3N1ZXMuYXBhY2hlLm9yZy9qaXJhL2Jyb3dzZS9IQkFTRS0xOTE0OA==&article=true)），这个 WAL 文件就会发生 roll 操作。 我们可以通过 `hbase.regionserver.logroll.multiplier` 参数控制达到块大小的多少百分比就发生 roll。我们也可以通过 `hbase.regionserver.hlog.blocksize` 参数来控制块大小（注意，这个块大小不是 HDFS 的块大小）。除了文件大小能触发 rolling，HBase 也会定时去 Rolling WAL 文件，这个时间是通过 `hbase.regionserver.logroll.period` 参数实现的，默认是一小时。这两个策略满足一个就可以出发 WAL 的 Rolling 操作。
 
-WAL 文件的大小对于 HBase 恢复是有影响的，因为 HBase 在使用 WAL 文件恢复数据的时候，对应的 Region 是无法提供服务的，所以尽量保持少一些的 WAL 文件。
+WAL 文件的大小对于 HBase 恢复是有影响的，因为 HBase 在使用 WAL 文件恢复数据的时候，对应的 Region 是无法提供服务的，所以**尽量保持少一些的 WAL 文件**。
 
 一个 RegionServer 会包含多个 Region 的，HBase 并不为每个 Region 使用一个 WAL，而是整个 RegionServer 里面的 Regions 共用一个 WAL 日志。同时，**只有一个 WAL 文件处于 active 状态**。WAL 在 HDFS 上的目录格式和文件名称如下：
 
@@ -67,9 +67,9 @@ region 是 HBase 集群分布数据的最小单位。一张表可以有多个 Re
 
 Master启动时调用 AssignmentManager。
 
- AssignmentManager 查看 `hbase:meta` 中已经分配好的 Region
+AssignmentManager 查看 `hbase:meta` 中已经分配好的 Region
 
- 如果 Region 的分配依然有效的话 (如果 RegionServer 仍然在线的话) 维持当前分配
+如果 Region 的分配依然有效的话 (如果 RegionServer 仍然在线的话) 维持当前分配
 
 如果分配失效，LoadBalancerFactory 会被调用来分配 region。负载均衡器(HBase 1.0 默认使用 StochasticLoadBalancer ) 分配任务到 Region Server 中
 

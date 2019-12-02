@@ -130,3 +130,18 @@ Streamsets是一款大数据实时采集和ETL工具，可以实现不写一行�
 - 内置监控，可是实时查看数据流传输的基本信息和数据的质量
 - 强大的整合力，对现有常用组件全力支持，包括50种数据源、44种数据操作、46种目的地
 - 对于Streamsets来说，最重要的概念就是数据源(Origins)、操作(Processors)、目的地(Destinations)。创建一个Pipelines管道配置也基本是这三个方面
+
+## Presto
+
+**Presto**是一种用于大数据的高性能分布式[SQL](https://zh.wikipedia.org/wiki/SQL)查询引擎。其架构允许用户查询各种数据源，如Hadoop、AWS S3、Alluxio、[MySQL](https://zh.wikipedia.org/wiki/MySQL)、[Cassandra](https://zh.wikipedia.org/wiki/Cassandra)、Kafka和MongoDB。甚至可以在单个查询中查询来自多个数据源的数据。Presto是[Apache许可证](https://zh.wikipedia.org/wiki/Apache许可证)下发布的社区驱动的开源软件。
+
+最初的需求是解决 Facebook 的 Apache Hive 在他们 PB 级的数据仓库上运行 SQL 分析。Hive不适合Facebook的规模，而Presto是为了填补快速查询这块的差距而发明的。
+
+Presto的架构非常类似于使用集群计算（MPP）的传统[数据库管理系统](https://zh.wikipedia.org/wiki/数据库管理系统)。它可以视为一个协调器节点，与多个工作节点同步工作。客户端提交已解析和计划的SQL语句，然后将并行任务安排给工作机。工作机一同处理来自数据源的行并生成返回给客户端的结果。与在每个查询上使用Hadoop的[MapReduce](https://zh.wikipedia.org/wiki/MapReduce)机制的原始Apache Hive执行模型相比，Presto不会将中间结果写入磁盘，从而显着提高速度。Presto是用[Java语言](https://zh.wikipedia.org/wiki/Java)编写的。单个Presto查询可以组合来自多个源的数据。**Presto提供数据源的连接器，包括Alluxio、Hadoop分布式文件系统、Amazon S3中的文件、[MySQL](https://zh.wikipedia.org/wiki/MySQL)、[PostgreSQL](https://zh.wikipedia.org/wiki/PostgreSQL)、[Microsoft SQL Server](https://zh.wikipedia.org/wiki/Microsoft_SQL_Server)、Amazon Redshift、Apache Kudu、Apache Phoenix、Apache Kafka、[Apache Cassandra](https://zh.wikipedia.org/wiki/Cassandra)、Apache Accumulo、MongoDB和Redis。**与其他只支持Hadoop特定发行版的工具（如Cloudera Impala）不同，Presto可以使用任何风格的Hadoop，也可以不用Hadoop。Presto支持计算和存储的分离，可以在本地和[云中](https://zh.wikipedia.org/wiki/雲端運算)部署。
+
+与 Impala 性能比较方面，Impala 胜出，Impala 性能还是蛮明显的，但数据源方面，Presto 支持更多的数据源，但两者都不支持 HBase。
+
+[拓展阅读](https://blog.csdn.net/u012551524/article/details/79124532)
+
+
+

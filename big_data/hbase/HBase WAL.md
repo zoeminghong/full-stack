@@ -18,9 +18,9 @@ WAL 每次写 Log 日志时，默认会往集群其他 DataNode 节点进行数�
 
 ## Log Split
 
-一个 RegionServer 中只有 HLog，该 RegionServer 中的所有 Region 数据都会往该 HLog 进行 Append 操作，导致数据是不连续的。当 RegionServer 宕机之后，对 Region 数据进行还原，需要使用 HLog，因此需要把 HLog 中的更新按照 region 分组，这一把 HLog 中更新日志分组的过程就称为 log split。
+一个 RegionServer 中只有一个 HLog，该 RegionServer 中的所有 Region 数据都会往该 HLog 进行 Append 操作，导致数据是不连续的。当 RegionServer 宕机之后，对 Region 数据进行还原，需要使用 HLog，因此需要**把 HLog 中的更新按照 region 分组**，这一把 HLog 中更新日志分组的过程就称为 log split。
 
- log split 由 Master 分配不同的任务给不同的 RegionServer 处理，提升速度，相应的操作信息通过 zk 进行记录和分发。
+log split 由 Master 分配不同的任务给不同的 RegionServer 处理，提升速度，相应的操作信息通过 zk 进行记录和分发。
 
 分布式日志分割可以通过配置项 `hbase.master.distributed.log.splitting` 来控制，默认为 true, 即默认情况下分布式日志分割是打开的。
 
