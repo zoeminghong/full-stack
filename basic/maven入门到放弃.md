@@ -840,7 +840,7 @@ mvn spring-boot:run -Drun.profiles=foo,bar
 
 - **祖父工程中的依赖与子工程中的版本号不一致，出现打包的时候，一直使用的是父工程的依赖数据。**
 
-可以在父工程的<dependenceManagement>中添加子工程中的依赖版本，进行覆写
+可以在父工程的`<dependenceManagement>`中添加子工程中的依赖版本，进行覆写
 
 ### 常见变量
 

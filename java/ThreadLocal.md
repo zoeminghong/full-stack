@@ -102,3 +102,68 @@ ThreadLocalMap实现中已经考虑了这种情况，在调用 set()、get()、r
 **如何避免：**
 
 使用完ThreadLocal后，执行remove操作，避免出现内存溢出情况。
+
+## 问题
+
+**1、ThreadLocal 中map的 key 是什么？**
+
+Map的key是ThreadLocal类的实例对象，value为用户的值，并不是网上大多数的例子key是线程的名字或者标识。
+
+**2、ThreadLocal 是如何实现多线程线程安全的？**
+
+![image-20191220162523436](assets/image-20191220162523436.png)
+
+- 每个线程都会创建一个 ThreadLocalMap 对象，这是一个 Map 对象，Map 中 Key 为 ThreadLocal 实例对象，Value 为调用者赋予的值。
+- 在多线程场景中，就会存在创建多个 ThreadLocal 对象实例了，至于为什么 ThreadLocalMap 要是一个 Map 对象，由于一个线程中可能存在多个 ThreadLocal 实例对象。
+
+所以可以看出 ThreadLocal 实现线程安全是靠每个线程独自拥有一个变量，并非是共享的。
+
+**3、ThreadLocal 的 set 操作流程？**
+
+1. 根据当前线程对象获取 ThreadLocalMap 对象
+2. 如果 ThreadLocalMap  为空则初始化并**与当前线程对象绑定**
+3. key 为ThreadLocal 对象实例
+
+**4、ThreadLocal 的 get 操作流程？**
+
+1. 根据当前线程对象获取 ThreadLocalMap 对象
+2. 以 ThreadLocal 对象实例进行 threadLocalHashCode，获取 table 索引位置，从而获取 key
+
+**5、ThreadLocal的内存泄露问题？**
+
+ThreadLocalMap使用ThreadLocal的弱引用作为key，如果一个ThreadLocal没有外部强引用引用他，那么系统gc的时候，这个ThreadLocal势必会被回收，这样一来，ThreadLocalMap中就会出现key为null的Entry，就没有办法访问这些key为null的Entry的value，如果当前线程再迟迟不结束的话，这些key为null的Entry的value就会一直存在一条强引用链：
+Thread Ref -> Thread -> ThreaLocalMap -> Entry -> value
+永远无法回收，造成内存泄露。
+
+ThreadLocalMap设计时的对上面问题的对策：
+ThreadLocalMap的getEntry函数的流程大概为：
+
+首先从ThreadLocal的直接索引位置(通过ThreadLocal.threadLocalHashCode & (table.length-1)运算得到)获取Entry e，如果e不为null并且key相同则返回e；
+如果e为null或者key不一致则向下一个位置查询，如果下一个位置的key和当前需要查询的key相等，则返回对应的Entry。否则，如果key值为null，则擦除该位置的Entry，并继续向下一个位置查询。在这个过程中遇到的key为null的Entry都会被擦除，那么Entry内的value也就没有强引用链，自然会被回收。仔细研究代码可以发现，set操作也有类似的思想，将key为null的这些Entry都删除，防止内存泄露。
+　　但是光这样还是不够的，上面的设计思路依赖一个前提条件：要调用ThreadLocalMap的getEntry函数或者set函数。这当然是不可能任何情况都成立的，所以很多情况下需要使用者手动调用ThreadLocal的remove函数，手动删除不再需要的ThreadLocal，防止内存泄露。所以JDK建议将ThreadLocal变量定义成private static的，这样的话ThreadLocal的生命周期就更长，由于一直存在ThreadLocal的强引用，所以ThreadLocal也就不会被回收，也就能保证任何时候都能根据ThreadLocal的弱引用访问到Entry的value值，然后remove它，防止内存泄露。
+
+为什么要不断往后找key为null的情况呢，首先这个threadLocalHashCode是有规律，不断往后累加的，如果在前面的entity中存在为空的情况，也就意味着后面值也有可能存在为null的情况。
+
+**6、ThreadLocalMap 结构？**
+
+![image-20191220165056168](assets/image-20191220165056168.png)
+
+默认数组长度为 16，负载因子为 2/3，解决冲突的方法是再hash法，也就是：在当前hash的基础上再自增一个常量。
+
+**7、如何实现一个线程多个ThreadLocal对象，每一个ThreadLocal对象是如何区分的呢？**
+
+```java
+private final int threadLocalHashCode = nextHashCode();
+private static AtomicInteger nextHashCode = new AtomicInteger();
+private static final int HASH_INCREMENT = 0x61c88647;
+private static int nextHashCode() {
+      return nextHashCode.getAndAdd(HASH_INCREMENT);
+}
+```
+
+对于每一个ThreadLocal对象，都有一个final修饰的int型的threadLocalHashCode不可变属性，对于基本数据类型，可以认为它在初始化后就不可以进行修改，所以可以唯一确定一个ThreadLocal对象。
+　　但是如何保证两个同时实例化的ThreadLocal对象有不同的threadLocalHashCode属性：在ThreadLocal类中，还包含了一个static修饰的AtomicInteger（[əˈtɒmɪk]提供原子操作的Integer类）成员变量（即类变量）和一个static final修饰的常量（作为两个相邻nextHashCode的差值）。由于nextHashCode是类变量，所以每一次调用ThreadLocal类都可以保证nextHashCode被更新到新的值，并且下一次调用ThreadLocal类这个被更新的值仍然可用，同时AtomicInteger保证了nextHashCode自增的原子性。
+
+**8、为什么不直接用线程id来作为ThreadLocalMap的key？**
+
+在一个线程多个ThreadLocal对象时，就无法进行区分了。

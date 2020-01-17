@@ -90,7 +90,7 @@ final int hash(Object k) {
     }
 ```
 
-在这里我们可以看到，他们除了key的hash算法不同，HashTable的比较简单，只是用key的哈希值与0x7FFFFFFF(十进制2147483647，二进制1111111111111111111111111111111)进行一次与运算，即为只要相同二进制位上不论0，1全部都变成1，再对table数组的长度取模。而HashMap 1.7则为key的哈希值进行各位无符号位移加异或运算，取得最终哈希值。然后是HashTable不接收null的key,而HashMap接受。他们最大的区别就在于synchronized显示器锁了。
+在这里我们可以看到，他们除了key的hash算法不同，HashTable的比较简单，只是用key的哈希值与0x7FFFFFFF(十进制2147483647，二进制1111111111111111111111111111111)进行一次与运算，即为只要相同二进制位上不论0，1全部都变成1，再对table数组的长度取模。而HashMap 1.7则为key的哈希值进行各位无符号位移加异或运算，取得最终哈希值。然后是**HashTable不接收null的key**,而HashMap接受。**他们最大的区别就在于synchronized显示器锁了。**
 
 synchronized的本质是所有对象的字节码中有一个monitor的对象头，任何线程拿到了这个monitor的对象头就可以对这个对象进行操作，而拿不到monitor对象头的线程就只能等待，直到拿到了monitor的线程放弃，其他线程才能争夺这个对象头来对对象进行操作。那么问题来了，当大量线程高并发的时候，只要有一个线程拿到了这个对象头，其他线程对这个对象是既不能读也不能写。而对于HashMap来说，如果多线程对其进行操作，那么任意线程都可以胡乱修改里面值的内容造成脏读，所以HashMap是线程不安全的。
 
@@ -219,8 +219,7 @@ sizeCtl ：默认为0，用来控制table的初始化和扩容操作，具体应
 2、如果table初始化完成，表示table的容量，默认是table大小的0.75倍  
 ```
 
-扩容时候会判断这个值，如果超过阈值就要扩容，首先根据运算得到需要遍历的次数i，然后利用tabAt方法获得i位置的元素f，初始化一个forwardNode实例fwd，如果f == null，则在table中的i位置放入fwd，否则采用头插法的方式把当前旧table数组的指定任务范围的数据给迁移到新的数组中，然后 
-给旧table原位置赋值fwd。直到遍历过所有的节点以后就完成了复制工作，把table指向nextTable，并更新sizeCtl为新数组大小的0.75倍 ，扩容完成。在此期间如果其他线程的有读写操作都会判断head节点是否为forwardNode节点，如果是就帮助扩容。 
+扩容时候会判断这个值，如果超过阈值就要扩容，首先根据运算得到需要遍历的次数i，然后利用tabAt方法获得i位置的元素f，初始化一个forwardNode实例fwd，如果f == null，则在table中的i位置放入fwd，否则采用头插法的方式把当前旧table数组的指定任务范围的数据给迁移到新的数组中，然后 给旧table原位置赋值fwd。直到遍历过所有的节点以后就完成了复制工作，把table指向nextTable，并更新sizeCtl为新数组大小的0.75倍 ，扩容完成。在此期间如果其他线程的有读写操作都会判断head节点是否为forwardNode节点，如果是就帮助扩容。 
 
 扩容源码如下： 
 
@@ -377,6 +376,8 @@ volatile修饰的数组引用是强可见的，但是其元素却不一定，所
 ## 拓展
 
 [深入理解HashMap+ConcurrentHashMap的扩容策略](https://www.cnblogs.com/lfs2640666960/p/9621461.html)
+
+推荐：[为并发而生的 ConcurrentHashMap（Java 8）](https://www.jianshu.com/p/e99e3fcface4)
 
 ## 问题
 
