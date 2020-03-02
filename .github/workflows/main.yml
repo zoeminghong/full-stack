@@ -1,4 +1,4 @@
-name: deploy to aliyun
+name: deploy to huaweiCloud
 on:
   push:
     branches:
@@ -16,7 +16,7 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
           ARGS: "-avz --delete"
-          SOURCE: "[Current File Dir]"
+          SOURCE: ""
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.REMOTE_TARGET }}
