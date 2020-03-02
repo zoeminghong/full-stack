@@ -1,4 +1,4 @@
-name: deploy to huaweiCloud
+name: deploy to HuaweiCloud
 on:
   push:
     branches:
