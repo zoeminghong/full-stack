@@ -1,5 +1,21 @@
 ## 生产者
 
+### 问题
+
+1. `client.id` 在 kafka 中的价值是什么？
+
+   
+
+2. header 消息头部有什么价值？
+
+3. KafkaProducer 是否为线程安全？
+
+   KafkaProducer 线程安全，支持多个线程共享同一个实例对象。
+
+4. 
+
+
+
 生产者在 Kafka 中是必须存在的角色。在 Kafka 中 `ReplicatManager` **负责将生产者发送的消息写入到 Leader 副本、管理 Follower 副本与 Leader 副本之间的数据同步以及副本角色之间的转换。**
 
 消息发送流程：

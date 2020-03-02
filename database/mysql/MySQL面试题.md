@@ -80,8 +80,6 @@ http://blog.codinglabs.org/articles/theory-of-mysql-index.html
 
 聚集索引是要确定唯一性的，聚集索引可以非唯一的
 
-MYSQL 为什么索引
-
 #### **什么是索引的最左匹配特性？**
 
 当 B+Tree 的数据项是复合的数据结构，比如索引 `(name, age, sex)` 的时候，B+Tree 是按照从左到右的顺序来建立搜索树的。
@@ -128,4 +126,11 @@ Innodb 的锁的策略为 next-key 锁，即 record lock + gap lock ，是通过
 - 如果 index 为 unique index ，则降级为 record lock 行锁。
 - 如果是普通 index ，则为 next-key lock 。
 - 如果没有 index ，则直接锁住全表，即表锁。
+
+#### MYSQL范围查询有哪些要注意的？？
+
+- 大于、小于范围时，该条件之后的索引都不生效，当前索引生效
+- 多个比较大小的范围查询时，可能存在只有一个比较大小索引命中，其他的都不命中的可能性
+
+https://draveness.me/mysql-innodb
 
