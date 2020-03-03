@@ -18,4 +18,4 @@ jobs:
             privateKey: ${{ secrets.ACCESS_TOKEN }}
             command: |
               cd /usr/local/nginx/html/full-stack
-              git pull orgin master
+              git pull origin master
