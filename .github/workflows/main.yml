@@ -18,4 +18,4 @@ jobs:
             privateKey: ${{ secrets.ACCESS_TOKEN }}
             command: |
               cd /usr/local/nginx/html
-              git clone git@github.com:zoeminghong/full-stack.git
+              git pull orgin master
