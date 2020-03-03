@@ -18,5 +18,5 @@ jobs:
           ARGS: "-avz --delete"
           SOURCE: ""
           REMOTE_HOST: "121.37.162.97"
-          REMOTE_USER: "root"
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.REMOTE_TARGET }}
