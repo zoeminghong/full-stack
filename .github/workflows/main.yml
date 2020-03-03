@@ -1,4 +1,4 @@
-name: deploy to HuaweiCloud
+name: deploy to aliyun
 on:
   push:
     branches:
@@ -11,12 +11,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
       # Deploy
-      - name: ssh deploy
-        uses: easingthemes/ssh-deploy@v2.0.8
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
-          ARGS: "-avz --delete"
-          SOURCE: ""
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: ${{ secrets.REMOTE_TARGET }}
+      - name: SSH Execute Commands
+        uses: JimCronqvist/action-ssh@0.1.1
+        with:
+            hosts: "root@121.37.162.97"
+            privateKey: ${{ secrets.ACCESS_TOKEN }}
+            command: |
+              cd /usr/local/nginx/html
+              git clone git@github.com:zoeminghong/full-stack.git
