@@ -17,5 +17,5 @@ jobs:
             hosts: "root@121.37.162.97"
             privateKey: ${{ secrets.ACCESS_TOKEN }}
             command: |
-              cd /usr/local/nginx/html
+              cd /usr/local/nginx/html/full-stack
               git pull orgin master
