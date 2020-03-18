@@ -29,12 +29,12 @@ BeanDefinition 管理者, 通过 BeanFactory 将 BeanDefinition 注册到 Map �
 
 是一个拓展接口
 
-BeanFactoryPostProcessor是在spring容器加载了bean的定义文件之后，在bean实例化之前，可以修改 bean 的相关信息，比如bean的scope从singleton改为prototype。
+BeanFactoryPostProcessor是在spring容器加载了bean的定义文件之后**，在bean实例化之前**，可以修改 bean 的相关信息，比如bean的scope从singleton改为prototype。
 
 
 # BeanPostProcessor
 
-BeanPostProcessor，可以在spring容器实例化bean之后，在执行bean的初始化方法前后，添加一些自己的处理逻辑。这里说的初始化方法，指的是下面两种：
+BeanPostProcessor（拦截器），可以在spring容器实例化bean之后，在执行bean的初始化方法前后，添加一些自己的处理逻辑。这里说的初始化方法，指的是下面两种：
 1）bean实现了InitializingBean接口，对应的方法为afterPropertiesSet
 
 2）在bean定义的时候，通过init-method设置的方法
@@ -80,8 +80,8 @@ https://juejin.im/post/5d3505fcf265da1bc14b6640
 
 3、如果调用afterPropertiesSet方法时出错，则不调用init-method指定的方法。
 获取 Bean 实例
-InitializingBean 直接调用接口
-init-method 反射方式
+**InitializingBean 直接调用接口**
+**init-method 反射方式**
 
 
 FactoryBean在IOC容器的基础上给Bean的实现加上了一个简单工厂模式和装饰模式
