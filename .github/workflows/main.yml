@@ -14,7 +14,7 @@ jobs:
       - name: SSH Execute Commands
         uses: JimCronqvist/action-ssh@0.1.1
         with:
-            hosts: "root@121.37.162.97"
+            hosts: "root@121.37.162.97 -o StrictHostKeyChecking=no"
             privateKey: ${{ secrets.ACCESS_TOKEN }}
             command: |
               cd /usr/local/nginx/html/full-stack
