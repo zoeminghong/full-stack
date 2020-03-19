@@ -12,8 +12,6 @@ Spring 容器负责实例化，配置和装配 Spring beans。
 
 ### BeanFactory 和 ApplicationContext 的不同点
 
-都可以用于从容器中获取 Spring Bean。
-
 **BeanFactory 接口**
 
 通常情况，BeanFactory 的实现是使用**懒加载**的方式，这意味着 beans 只有在我们通过 getBean() 方法直接调用它们时才进行实例化
@@ -85,9 +83,9 @@ Spring 框架提供了以下四种方式来管理 bean 的生命周期事件:
 
 1. 通过构造器或工厂方法创建 Bean 实例
 2. 为 Bean 的属性设置值和对其他 Bean 的引用
-3. 将 Bean 实 例 传 递 给 Bean 后 置 处 理 器 的 postProcessBeforeInitialization 方法
+3. 将 Bean 实 例 传 递 给 Bean 后 置 处 理 器 的 postProcessBefore.Initialization 方法
 4. 调用 Bean 的初始化方法(init-method)
-5. 将 Bean 实 例 传 递 给 Bean 后 置 处 理 器 的 postProcessAfterInitialization 方法 
+5. 将 Bean 实 例 传 递 给 Bean 后 置 处 理 器 的 postProcessAfter.Initialization 方法 
 6. Bean 可以使用了
 7. 当容器关闭时, 调用 Bean 的销毁方法(destroy-method)
 
@@ -139,12 +137,12 @@ DisposableBean、@PreDestroy、destroy-method
 
 ### **Spring** 框架中的单例 **Beans** 是线程安全的么?
 
- Spring 框架并没有对单例 bean 进行任何多线程的封装处理。关于单例 bean 的线程安全和并发问 题需要**开发者自行去搞定**。但实际上，大部分的 Spring bean 并没有可变的状态(比如 Serview 类 和 DAO 类)，所以在某种程度上说 Spring 的单例 bean 是线程安全的。如果你的 bean 有多种状 态的话(比如 View Model 对象)，就需要自行保证线程安全。
+ Spring 框架并没有对单例 bean 进行任何多线程的封装处理。关于单例 bean 的线程安全和并发问题需要**开发者自行去搞定**。但实际上，大部分的 Spring bean 并**没有可变的状态**(比如 Service 类 和 DAO 类)，所以在某种程度上说 Spring 的单例 bean 是线程安全的。如果你的 bean 有多种状 态的话(比如 View Model 对象)，就需要自行保证线程安全。
  最浅显的解决办法就是**将多态 bean 的作用域由“singleton”变更为“prototype”。**
 
 ### 请解释 **Spring Bean** 的自动装配?
 
-在 Spring 框架中，在配置文件中设定 bean 的依赖关系是一个很好的机制，Spring 容器还可以自 动装配合作关系 bean 之间的关联关系。这意味着 Spring 可以通过向 Bean Factory 中注入的方 式自动搞定 bean 之间的依赖关系。自动装配可以设置在每个 bean 上，也可以设定在特定的 bean 上。
+在 Spring 框架中，在配置文件中设定 bean 的依赖关系是一个很好的机制，Spring 容器还可以自动装配合作关系 bean 之间的关联关系。这意味着 Spring 可以通过向 Bean Factory 中注入的方式自动搞定 bean 之间的依赖关系。自动装配可以设置在每个 bean 上，也可以设定在特定的 bean 上。
 
 ### 请解释自动装配模式的区别?
 
@@ -158,8 +156,8 @@ DisposableBean、@PreDestroy、destroy-method
 
 被该注解修饰的set方法会被要求该属性必须被设置值。
 
-### 简述 **AOP** 和 **IOC** 概念 **AOP:**
+### 简述 **AOP** 和 **IOC** 概念
 
-Aspect Oriented Program, 面向(方面)切面的编程;Filter(过滤器) 也是一种 AOP. AOP 是一种 新的方法论, 是对传统 OOP(Object-Oriented Programming, 面向对象编程) 的补充. AOP 的 主要编程对象是切面(aspect), 而切面模块化横切关注点.可以举例通过事务说明.
+ **AOP:**Aspect Oriented Program, 面向(方面)切面的编程;Filter(过滤器) 也是一种 AOP. AOP 是一种 新的方法论, 是对传统 OOP(Object-Oriented Programming, 面向对象编程) 的补充. AOP 的 主要编程对象是切面(aspect), 而切面模块化横切关注点.可以举例通过事务说明.
 
-IOC: Invert Of Control, 控制反转. 也成为 DI(依赖注入)其思想是反转 资源获取的方向. 传统 的资源查找方式要求组件向容器发起请求查找资源.作为回应, 容器适时的返回资源. **而应用了 IOC 之后, 则是容器主动地将资源推送给它所管理的组件**,组件所要做的仅是选择一种合适的方式 来接受资源. 这种行 为也被称为查找的被动形式
+IOC: Invert Of Control, 控制反转. 也成为 DI(依赖注入)其思想是反转资源获取的方向. 传统 的资源查找方式要求组件向容器发起请求查找资源.作为回应, 容器适时的返回资源. **而应用了 IOC 之后, 则是容器主动地将资源推送给它所管理的组件**,组件所要做的仅是选择一种合适的方式 来接受资源. 这种行 为也被称为查找的被动形式

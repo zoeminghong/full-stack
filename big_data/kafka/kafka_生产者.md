@@ -117,6 +117,10 @@ RecordAccumulator 数据结构为双端队列（`Deque<ProducerBatch>`），从�
 
 这是 ProducerRecord 集合，是指一个消息批次，这样做的好处是使字节的使用更加紧凑，减少网络传输的资源损耗以提升性能。
 
+`linger.ms` 为消息发送停留时间，当到达该时间之后，就会往 Sender 线程发送数据。
+
+ `batch.size` 为每个 ProducerBatch 理论最大限度（部分数据也会超过该值），当达到这个值，就会往 Sender 线程发送数据。
+
 #### BufferPool
 
 主要用于实现 ByteBuffer 的复用，已实现缓存的高效利用。
@@ -155,19 +159,41 @@ InFlightRequests 中的请求不仅仅是发送消息，还有获取元数据的
 
 InFlightRequests 发送主题消息时，是根据主题 Partition 的 Leader 副本所在的 Node 发起请求。
 
-### 问题
+## 参数说明
+
+## acks
+
+Kafka提供三种消息确认机制（acks），通过属性`request.required.acks`设置。
+
+acks=0：生产者不用等待代理返回确认信息，而连续发送消息
+
+acks=1：默认模式，生产者需要等待Leader副本已成功将消息写入日志文件中。一定程度上降低数据丢失的风险。在Leader副本宕机时，Follower副本没有及时同步数据，之后代理也不会再向宕机的Leader进行数据的获取，数据就出现了丢失
+
+acks=-1：Leader副本和所有Follower列表中副本都完成数据的存储才会想生产者发生确认信息，即同步副本必须大于1，通过`min.insync.replicas`设置，当同步副本不足该配置值时，生产者会抛异常。该种模式会影响生产者的发送数据的速度以及吞吐量。
+
+### 生产者配置说明
+
+| 属性值                             | 默认值           | 描述                                                         |
+| ---------------------------------- | ---------------- | ------------------------------------------------------------ |
+| Message.send.max.retries           | 3                | 生产者在丢失该消息前进行重试次数                             |
+| Retry.backoff.ms                   | 100              | 检测新的Leader是否已选举出来，更新主题的MetaData之前生产者需要等待的时间 |
+| Queue.buffering.max.ms             | 1000             | 当到达该时间后消息开始批量发送，若异步模式下，同时配置了`Batch.num.messages`，则达到这两个阀值之一都将开始批量发送消息 |
+| Queue.buffering.max.message        | 10000            | 在异步模式下，在生产者必须被阻塞或者数据必须丢失之前，可以缓存到队列中的未发送的最大消息条数，即初始化消息队列的长度 |
+| Batch.num.messages                 | 200              | 在异步模式下每次批量发送消息的最大消息数                     |
+| Request.timeout.ms                 | 1500             | 当需要acks时，生产者等待代理应答的超时时间，若该时间范围内没有应答，则会发送错误到客户端 |
+| Topic.metadata.refresh.interval.ms | 5min             | 生产者定时请求更新主题元数据的时间间隔。若设置为0，则在每个消息发送后都去请求更新数据 |
+| Client.id                          | Console.producer | 生产者指定的一个标识字段，在每次请求中包含该字段，用来追踪调用，根据该字段在逻辑上可以确认是哪个应用发出的请求 |
+| Queue.enqueue.timeout.ms           | 2147483647       | 该值为0，标识该队列没满是直接入队，满了则立即丢弃，负数表示无条件阻塞且不丢弃，正数表示阻塞达到该值时长后抛出QueueFullException异常 |
+
+## 问题
 
 1. `client.id` 在 kafka 中的价值是什么？
 
-   
-
-2. 
-
-3. KafkaProducer 是否为线程安全？
+2. KafkaProducer 是否为线程安全？
 
    KafkaProducer 线程安全，支持多个线程共享同一个实例对象。
 
-4. 
+3. 
 
 
 
@@ -200,28 +226,4 @@ InFlightRequests 发送主题消息时，是根据主题 Partition 的 Leader �
 ##### 为什么在拉取数据的时候需要延迟操作呢？
 
 是为了让当前拉取获得足够的消息数据。
-
-## acks
-
-Kafka提供三种消息确认机制（acks），通过属性`request.required.acks`设置。
-
-acks=0：生产者不用等待代理返回确认信息，而连续发送消息
-
-acks=1：默认模式，生产者需要等待Leader副本已成功将消息写入日志文件中。一定程度上降低数据丢失的风险。在Leader副本宕机时，Follower副本没有及时同步数据，之后代理也不会再向宕机的Leader进行数据的获取，数据就出现了丢失
-
-acks=-1：Leader副本和所有Follower列表中副本都完成数据的存储才会想生产者发生确认信息，即同步副本必须大于1，通过`min.insync.replicas`设置，当同步副本不足该配置值时，生产者会抛异常。该种模式会影响生产者的发送数据的速度以及吞吐量。
-
-### 生产者配置说明
-
-| 属性值                             | 默认值           | 描述                                                         |
-| ---------------------------------- | ---------------- | ------------------------------------------------------------ |
-| Message.send.max.retries           | 3                | 生产者在丢失该消息前进行重试次数                             |
-| Retry.backoff.ms                   | 100              | 检测新的Leader是否已选举出来，更新主题的MetaData之前生产者需要等待的时间 |
-| Queue.buffering.max.ms             | 1000             | 当到达该时间后消息开始批量发送，若异步模式下，同时配置了`Batch.num.messages`，则达到这两个阀值之一都将开始批量发送消息 |
-| Queue.buffering.max.message        | 10000            | 在异步模式下，在生产者必须被阻塞或者数据必须丢失之前，可以缓存到队列中的未发送的最大消息条数，即初始化消息队列的长度 |
-| Batch.num.messages                 | 200              | 在异步模式下每次批量发送消息的最大消息数                     |
-| Request.timeout.ms                 | 1500             | 当需要acks时，生产者等待代理应答的超时时间，若该时间范围内没有应答，则会发送错误到客户端 |
-| Topic.metadata.refresh.interval.ms | 5min             | 生产者定时请求更新主题元数据的时间间隔。若设置为0，则在每个消息发送后都去请求更新数据 |
-| Client.id                          | Console.producer | 生产者指定的一个标识字段，在每次请求中包含该字段，用来追踪调用，根据该字段在逻辑上可以确认是哪个应用发出的请求 |
-| Queue.enqueue.timeout.ms           | 2147483647       | 该值为0，标识该队列没满是直接入队，满了则立即丢弃，负数表示无条件阻塞且不丢弃，正数表示阻塞达到该值时长后抛出QueueFullException异常 |
 
